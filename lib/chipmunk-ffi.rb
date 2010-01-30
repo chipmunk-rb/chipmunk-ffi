@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'nice-ffi'
 
 module CP
