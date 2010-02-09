@@ -25,7 +25,7 @@ module CP
     attach_variable func_name, :pointer
     const_func_name = func_sym.to_s.upcase
 
-    func = FFI::Function.new(ret, args, FFI::Pointer.new(self.send(func_name)), :convention => :default )
+    func = FFI::Function.new(ret, args, FFI::Pointer.new(self.send(func_name).to_i), :convention => :default )
     const_set const_func_name, func
 
     instance_eval <<-METHOD
