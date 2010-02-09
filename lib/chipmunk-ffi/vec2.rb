@@ -197,7 +197,9 @@ module CP
 
   end
   ZERO_VEC_2 = Vec2.new(0,0).freeze
-
+  def zero
+    ZERO_VEC_2
+  end
 end
 def vec2(x,y)
   CP::Vec2.new x, y
