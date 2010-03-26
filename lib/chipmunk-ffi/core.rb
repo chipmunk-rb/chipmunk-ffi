@@ -30,7 +30,7 @@ module CP
 
   func :cpMomentForSegment, [CP_FLOAT,Vect.by_value,Vect.by_value], CP_FLOAT
   def self.moment_for_segment(m,v1,v2)
-    cpMomentForCircle(m, v1.struct, v2.struct)
+    cpMomentForSegment(m, v1.struct, v2.struct)
   end
 
   func :cpMomentForPoly, [CP_FLOAT,:int,:pointer,Vect.by_value], CP_FLOAT
