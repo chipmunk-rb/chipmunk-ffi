@@ -51,6 +51,7 @@ module CP
   func :cpResetShapeIdCounter, [], :void
   func :cpShapePointQuery, [:pointer, Vect.by_value], :int
 	func :cpShapeSegmentQuery, [:pointer, Vect.by_value, Vect.by_value, :pointer], :int
+  func :cpPolyValidate, [:pointer, :int], :int
 
   module Shape
     class SegmentQueryInfo
@@ -200,6 +201,15 @@ module CP
       include Shape
       def initialize(body, verts, offset_vec)
         @body = body
+        verts = CP::Shape::Poly.make_vertices_valid(verts)
+        mem_pointer = CP::Shape::Poly.pointer_for_verts(verts)
+        
+        ptr = CP.cpPolyShapeNew body.struct.pointer, verts.size, mem_pointer, offset_vec.struct
+        @struct = ShapeStruct.new ptr
+        set_data_pointer
+      end
+      
+      def self.pointer_for_verts(verts)
         mem_pointer = FFI::MemoryPointer.new Vect, verts.size
         vert_structs = verts.collect{|s|s.struct}
 
@@ -209,9 +219,28 @@ module CP
           tmp.send(:put_bytes, 0, i.to_bytes, 0, size)
           tmp += size unless j == vert_structs.length-1 # avoid OOB
         }
-        ptr = CP.cpPolyShapeNew body.struct.pointer, verts.size, mem_pointer, offset_vec.struct
-        @struct = ShapeStruct.new ptr
-        set_data_pointer
+        return mem_pointer
+      end
+      
+      def self.strictly_valid_vertices?(verts)
+        mem_pointer = CP::Shape::Poly.pointer_for_verts(verts)
+        result = CP.cpPolyValidate(mem_pointer,verts.size)
+        return (result != 0)
+      end
+      
+      def self.valid_vertices?(verts)
+        CP::Shape::Poly.strictly_valid_vertices?(verts) || 
+        CP::Shape::Poly.strictly_valid_vertices?(verts.reverse)
+      end
+      
+      def self.make_vertices_valid(verts)
+        if CP::Shape::Poly.strictly_valid_vertices?(verts)
+          return verts
+        elsif CP::Shape::Poly.strictly_valid_vertices?(verts.reverse)
+          return verts.reverse
+        else
+          raise "Chipmunk-FFI Error: Vertices do not form convex polygon."
+        end
       end
     end
   end
