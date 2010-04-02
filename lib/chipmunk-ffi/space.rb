@@ -26,6 +26,7 @@ module CP
       :elastic_iterations, :int,
       :gravity, Vect.by_value,
       :damping, CP_FLOAT,
+      :locked, :int,
       :stamp, :int,
       :static_shapes, :pointer,
       :active_shapes, :pointer,

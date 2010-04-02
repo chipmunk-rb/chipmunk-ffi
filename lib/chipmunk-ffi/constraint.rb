@@ -14,8 +14,21 @@ module CP
            :a, :pointer,
            :b, :pointer,
            :max_force, CP_FLOAT,
+           :bias_coef, CP_FLOAT,
            :max_bias, CP_FLOAT,
            :data, :pointer)
+  end
+  
+  module Constraint
+
+    
+    
+    attr_reader :body_a, :body_b, :struct
+    
+  
+      
+    
+    
   end
 
   require 'chipmunk-ffi/constraints/pin_joint'
