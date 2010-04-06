@@ -129,7 +129,72 @@ describe 'ShapeStruct in chipmunk' do
   describe 'Poly class' do
     it 'can be created' do
       bod = CP::Body.new 90, 76
-      s = CP::Shape::Poly.new bod, [vec2(1,1), vec2(2,2),vec2(3,3)], CP::ZERO_VEC_2
+      s = CP::Shape::Poly.new bod, [vec2(0,0), vec2(1,-1),vec2(-1,-1)], CP::ZERO_VEC_2
+    end
+    
+    it 'can strictly validate vertices' do
+      verts = [
+       vec2(-1,-1),
+       vec2(-1, 1),
+       vec2( 1, 1),
+       vec2( 1,-1)
+      ]
+      CP::Shape::Poly.strictly_valid_vertices?(verts).should be true
+      CP::Shape::Poly.strictly_valid_vertices?(verts.reverse).should be false
+      
+      verts = [
+        vec2(-1,-1),
+        vec2( 1,-1),
+        vec2( 0, 0), # Bad vert!
+        vec2( 1, 1),
+        vec2(-1, 1)
+      ]
+      CP::Shape::Poly.strictly_valid_vertices?(verts).should be false
+    end
+    
+    it 'can loosely validate vertices' do
+      verts = [
+       vec2(-1,-1),
+       vec2(-1, 1),
+       vec2( 1, 1),
+       vec2( 1,-1)
+      ]
+      CP::Shape::Poly.valid_vertices?(verts).should be true
+      CP::Shape::Poly.valid_vertices?(verts.reverse).should be true
+      
+      verts = [
+        vec2(-1,-1),
+        vec2( 1,-1),
+        vec2( 0, 0), # Bad vert!
+        vec2( 1, 1),
+        vec2(-1, 1)
+      ]
+      CP::Shape::Poly.valid_vertices?(verts).should be false
+    
+    end
+    
+    it 'accepts convex polygons with either winding' do
+      bod = CP::Body.new 90, 76
+      verts = [
+       vec2(-1,-1),
+       vec2(-1, 1),
+       vec2( 1, 1),
+       vec2( 1,-1)
+      ]
+      CP::Shape::Poly.new(bod,verts,CP::ZERO_VEC_2)
+      CP::Shape::Poly.new(bod,verts.reverse,CP::ZERO_VEC_2)
+    end
+    
+    it 'rejects concave polygons' do
+      bod = CP::Body.new 90, 76
+      verts = [
+        vec2(-1,-1),
+        vec2( 1,-1),
+        vec2( 0, 0), # Bad vert!
+        vec2( 1, 1),
+        vec2(-1, 1)
+      ]
+      lambda { CP::Shape::Poly.new(bod,verts,CP::ZERO_VEC_2) }.should raise_error
     end
   end
 

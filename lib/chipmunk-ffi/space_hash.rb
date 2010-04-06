@@ -8,8 +8,10 @@ module CP
            :cell_dim, CP_FLOAT,
            :bb_func, :cpSpaceHashBBFunc,
            :handle_set, :pointer,
+           :pooled_handles, :pointer,
            :table, :pointer,
            :bins, :pointer,
+           :allocated_buffers, :pointer,
            :stamp, :int)
   end
   func :cpSpaceHashNew,  [CP_FLOAT,:int,:cpSpaceHashBBFunc], :pointer
