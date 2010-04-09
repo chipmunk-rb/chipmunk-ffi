@@ -27,3 +27,6 @@ module CP
     end
   end
 end
+
+# Alias for compatibility with chipmunk C-Ruby bindings.
+CP::Constraint::SlideJoint = CP::SlideJoint

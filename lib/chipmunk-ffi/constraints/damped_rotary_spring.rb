@@ -41,3 +41,5 @@ module CP
   end
 end
 
+# Alias for compatibility with chipmunk C-Ruby bindings.
+CP::Constraint::DampedRotarySpring = CP::DampedRotarySpring
