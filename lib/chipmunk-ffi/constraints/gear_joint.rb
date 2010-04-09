@@ -11,14 +11,21 @@ module CP
              :j_max, CP_FLOAT)
   end
   func :cpGearJointNew, [:pointer, :pointer, CP_FLOAT, CP_FLOAT], :pointer
+  func :cpGearJointSetRatio, [:pointer, CP_FLOAT], :void
 
   class GearJoint
     include Constraint
-    struct_accessor GearJointStruct, :phase, :ratio
+    struct_accessor GearJointStruct, :phase
+    struct_reader GearJointStruct, :ratio
     def initialize(a_body, b_body, phase, ratio)
       @body_a, @body_b = a_body, b_body
       @struct = GearJointStruct.new(CP.cpGearJointNew(
         a_body.struct.pointer,b_body.struct.pointer,phase, ratio))
     end
+    
+    def ratio=(val)
+      CP.cpGearJointSetRatio(@struct.pointer,val)
+    end
+    
   end
 end

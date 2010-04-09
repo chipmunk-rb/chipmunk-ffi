@@ -292,6 +292,7 @@ describe 'Constraints in chipmunk' do
       joint.ratio.should == 2.0
       joint.ratio = 6.0
       joint.ratio.should == 6.0
+      joint.struct.ratio_inv.should be_close(1.0/6.0, 0.01)
     end
 
   end
