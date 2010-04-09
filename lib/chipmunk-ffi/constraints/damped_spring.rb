@@ -29,21 +29,33 @@ module CP
       @struct = DampedSpringStruct.new(CP.cpDampedSpringNew(
         a_body.struct.pointer,b_body.struct.pointer,anchr_one.struct,anchr_two.struct,
         rest_length, stiffness, damping))
+      set_data_pointer
+      set_initial_force_proc
     end
     
-    
-    # FIXME: Ideally, we'd prefer to pass DampedSprings, rather than DampedSpringStructs,
-    # to the user's lambda; or, better still, pass no spring at all, and allow them to refer
-    # to self. However, this means using wrapper procs in both the getter and the setter; in
-    # the case where the user takes a lambda recieved from a reader and supplies it to a writer;
-    # Each time this happens, we get a more deeply nested chain of lambdas.
     def spring_force_func
-      @struct.spring_force_func
+      @user_level_force_lambda
     end
     
     def spring_force_func=(l)
-      @spring_force_lambda = l # Keep the lambda from being GCed
+      @user_level_force_lambda = l
+      
+      # We keep the lambda in an ivar to keep it from being GCed
+      @spring_force_lambda = Proc.new do |spring_ptr,dist|
+        spring_struct = DampedSpringStruct.new(spring_ptr)
+        obj_id = spring_struct.constraint.data.get_long(0)
+        spring = ObjectSpace._id2ref(obj_id)
+        l.call(spring,dist)
+      end
       @struct.spring_force_func = @spring_force_lambda
+    end
+    
+    private
+    def set_initial_force_proc
+      ffi_func = @struct.spring_force_func
+      @user_level_force_lambda ||= Proc.new do |spring, dist|
+        ffi_func.call(spring.struct,dist)
+      end
     end
   end
 end

@@ -207,9 +207,9 @@ describe 'Constraints in chipmunk' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
       joint = CP::DampedSpring.new(boda,bodb,ZERO_VEC_2,ZERO_VEC_2,3,4,5)
-      joint.spring_force_func.call(joint.struct,1.0).should == 8.0
+      joint.spring_force_func.call(joint,1.0).should == 8.0
       joint.spring_force_func = lambda {|spring,float| float + 1.0 }
-      joint.spring_force_func.call(joint.struct,1.0).should == 2.0
+      joint.spring_force_func.call(joint,1.0).should == 2.0
     end
   end
 
