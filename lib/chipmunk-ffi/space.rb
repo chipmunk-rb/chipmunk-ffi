@@ -8,6 +8,7 @@ module CP
   callback :cpCollisionPostSolveFunc, [:pointer,:pointer,:pointer], :int
   callback :cpCollisionSeparateFunc, [:pointer,:pointer,:pointer], :int
 	callback :cpSpacePointQueryFunc, [:pointer,:pointer], :void
+	callback :cpSpaceSegmentQueryFunc, [:pointer, :float, Vect.by_value, :pointer], :void
 
   class CollisionHandlerStruct < NiceFFI::Struct
     layout(
@@ -43,7 +44,6 @@ module CP
     end
   end
 
-
   func :cpSpaceNew, [], :pointer
   func :cpSpaceFreeChildren, [:pointer], :void
   
@@ -72,7 +72,10 @@ module CP
   func :cpSpacePointQuery, [:pointer, Vect.by_value, :uint, :uint, :cpSpacePointQueryFunc, :pointer], :pointer
   func :cpSpacePointQueryFirst, [:pointer, Vect.by_value, :uint, :uint], :pointer
 
-  class Space
+  func :cpSpaceSegmentQuery, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :cpSpaceSegmentQueryFunc, :pointer], :int
+  func :cpSpaceSegmentQueryFirst, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :pointer], :pointer
+
+  class Space 
     attr_reader :struct
     def initialize
       @struct = SpaceStruct.new(CP.cpSpaceNew)
@@ -306,6 +309,53 @@ module CP
       end
 
       CP.cpSpacePointQuery(@struct.pointer, point.struct, layers, group,query_proc,nil)
+    end
+
+    class SegmentQueryInfo
+      attr_reader :hit,:shape, :t, :n
+      def initialize(hit,shape,t=nil,n=nil,info=nil)
+        @hit = hit
+        @shape = shape
+        @t = t
+        @n = n
+        @info = info
+      end
+    end
+
+    def shape_segment_query(a,b,layers=ALL_ONES,group=0)
+      segment_query_first(a,b,layers,group).shape
+    end
+    
+    def info_segment_query(a,b,layers=ALL_ONES,group=0)
+      segment_query_first(a,b,layers,group)
+    end
+
+    def segment_query_first(a,b,layers,group)
+      out_ptr = FFI::MemoryPointer.new(SegmentQueryInfoStruct.size)
+      info = SegmentQueryInfoStruct.new out_ptr
+
+      shape_ptr = CP.cpSpaceSegmentQueryFirst(@struct.pointer, a.struct.pointer, b.struct.pointer,layers,group,out_ptr)
+      if shape_ptr.null?
+        SegmentQueryInfo.new(false,nil,nil,nil,info)
+      else
+        shape_struct = ShapeStruct.new(shape_ptr)
+        obj_id = shape_struct.data.get_long(0)
+        shape = ObjectSpace._id2ref(obj_id)
+        n_vec = Vec2.new(info.n)
+        SegmentQueryInfo.new(true,shape,info.t,n_vec,info)
+      end
+    end
+    
+    def segment_query(a,b,layers,group,&block)
+      return nil unless block_given?
+      query_proc = Proc.new do |shape_ptr,t,n,data|
+        shape_struct = ShapeStruct.new(shape_ptr)
+        obj_id = shape_struct.data.get_long(0)
+        shape = ObjectSpace._id2ref(obj_id)
+        block.call(shape,t,n)
+      end
+      
+      CP.cpSpaceSegmentQuery(@struct.pointer, a.struct, b.struct, layers, group, query_proc, nil)
     end
 
   end

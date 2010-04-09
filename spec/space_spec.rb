@@ -177,5 +177,75 @@ describe 'Shape in chipmunk' do
     shapes.size.should == 1
     shapes.first.should == shapy
   end
+  
+  it 'can do a segment query' do
+    space = CP::Space.new
+    bod = CP::Body.new 90, 76
+    shapy = CP::Shape::Circle.new bod, 40, CP::ZERO_VEC_2
+    shapy.collision_type = :foo
+
+    space.add_shape shapy
+    
+    all_ones = 2**32-1
+		
+    shapes = []
+    space.segment_query(vec2(100,100),vec2(-100,-100), all_ones,0) do |shape|
+      shapes << shape
+    end
+    
+    shapes.size.should == 1
+    shapes.first.should == shapy
+  end
+  
+  it 'can do a segment query that returns info' do
+    space = CP::Space.new
+    bod = CP::Body.new 90, 76
+    shapy = CP::Shape::Circle.new bod, 20, CP::ZERO_VEC_2
+    shapy.collision_type = :foo
+    
+    space.add_shape(shapy)
+    
+    all_ones = 2**32-1
+    
+    info = space.info_segment_query(vec2(-100,10),vec2(0,10), all_ones, 0)
+    info.hit.should be_true
+    info.shape.should be shapy
+    info.t.should be_close(0.827,0.001)
+    info.n.x.should be_close(-0.866, 0.001)
+    info.n.y.should be_close(0.5, 0.001)
+  end
+  
+  it 'can do a segment query that returns a shape' do
+    space = CP::Space.new
+    bod = CP::Body.new(90, 76)
+    shapy = CP::Shape::Circle.new bod, 20, CP::ZERO_VEC_2
+    shapy.collision_type = :foo
+    
+    space.add_shape shapy
+    
+    all_ones = 2**32-1
+    
+    obj = space.shape_segment_query(vec2(-100,10),vec2(0,10))
+    obj.should == shapy
+  end
+  
+  it 'can do a segment query that finds no shape' do
+    space = CP::Space.new
+    obj = space.shape_segment_query(vec2(-100,10),vec2(0,10))
+    
+    obj.should be_nil
+  end
+  
+  it 'can do a segment query that finds no info' do
+    space = CP::Space.new
+    info = space.info_segment_query(vec2(-100,10),vec2(0,10))
+    
+    info.hit.should be_false
+    info.shape.should be_nil
+    info.t.should be_nil
+    info.n.should be_nil
+  end
+  
+  
 
 end
