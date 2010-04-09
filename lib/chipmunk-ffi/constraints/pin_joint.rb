@@ -16,8 +16,10 @@ module CP
   func :cpPinJointNew, [:pointer, :pointer, Vect.by_value, Vect.by_value], :pointer
 
   class PinJoint
-    attr_reader :struct
+    include Constraint
+    struct_accessor PinJointStruct, :anchr1, :anchr2, :dist
     def initialize(a_body, b_body, anchr_one, anchr_two)
+      @body_a, @body_b = a_body, b_body
       @struct = PinJointStruct.new(CP.cpPinJointNew(
         a_body.struct.pointer,b_body.struct.pointer,anchr_one.struct,anchr_two.struct))
     end

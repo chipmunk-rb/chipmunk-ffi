@@ -12,8 +12,10 @@ module CP
   func :cpRotaryLimitJointNew, [:pointer, :pointer, CP_FLOAT, CP_FLOAT], :pointer
 
   class RotaryLimitJoint
-    attr_reader :struct
+    include Constraint
+    struct_accessor RotaryLimitJointStruct, :min, :max
     def initialize(a_body, b_body, min, max)
+      @body_a, @body_b = a_body, b_body
       @struct = RotaryLimitJointStruct.new(CP.cpRotaryLimitJointNew(
         a_body.struct.pointer,b_body.struct.pointer,min,max))
     end

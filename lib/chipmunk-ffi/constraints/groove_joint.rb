@@ -20,8 +20,10 @@ module CP
   func :cpGrooveJointNew, [:pointer, :pointer, Vect.by_value, Vect.by_value, Vect.by_value], :pointer
 
   class GrooveJoint
-    attr_reader :struct
+    include Constraint
+    struct_accessor GrooveJointStruct, :anchr2
     def initialize(a_body, b_body, groove_a, groove_b, anchr2)
+      @body_a, @body_b = a_body, b_body
       @struct = GrooveJointStruct.new(CP.cpGrooveJointNew(
         a_body.struct.pointer,b_body.struct.pointer,groove_a.struct,groove_b.struct,anchr2.struct))
     end
