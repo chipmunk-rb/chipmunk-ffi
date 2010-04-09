@@ -25,10 +25,10 @@ module CP
     end
     
     
-    # FIXME: Ideally, we'd prefer to pass DampedSprings, rather than DampedSpringStructs,
+    # FIXME: Ideally, we'd prefer to pass DampedRotarySprings, rather than DampedRotarySpringStructs,
     # to the user's lambda; or, better still, pass no spring at all, and allow them to refer
-    # to self. However, this means using wrapper procs in both the getter and the setter; in
-    # the case where the user takes a lambda recieved from a reader and supplies it to a writer;
+    # to self. However, this means using wrapper procs in both the getter and the setter; This is dangerous
+    # in the case where the user takes a lambda recieved from a reader and supplies it to a writer
     # Each time this happens, we get a more deeply nested chain of lambdas.
     def spring_torque_func
       @struct.spring_torque_func
