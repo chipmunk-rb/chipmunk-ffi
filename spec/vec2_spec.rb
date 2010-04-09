@@ -234,6 +234,13 @@ describe 'Vect in chipmunk' do
       rv.x.should be_close(2.244,0.001)
       rv.y.should be_close(2.804,0.001)
     end
-
+    
+    it 'can compare' do
+      v1 = CP::Vec2.new(2,3)
+      v2 = CP::Vec2.new(2,3)
+      v3 = CP::Vec2.new(3,2)
+      v1.should == v2 
+      v1.should_not == v3
+    end
   end
 end
