@@ -18,8 +18,10 @@ module CP
   func :cpSlideJointNew, [:pointer, :pointer, Vect.by_value, Vect.by_value, CP_FLOAT, CP_FLOAT], :pointer
 
   class SlideJoint
-    attr_reader :struct
+    include Constraint
+    struct_accessor SlideJointStruct, :anchr1, :anchr2, :min, :max
     def initialize(a_body, b_body, anchr_one, anchr_two, min, max)
+      @body_a, @body_b = a_body, b_body
       @struct = SlideJointStruct.new(CP.cpSlideJointNew(
         a_body.struct.pointer,b_body.struct.pointer,anchr_one.struct,anchr_two.struct,min,max))
     end

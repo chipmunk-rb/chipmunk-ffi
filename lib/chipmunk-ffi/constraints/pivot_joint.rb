@@ -16,8 +16,10 @@ module CP
   func :cpPivotJointNew2, [:pointer, :pointer, Vect.by_value, Vect.by_value], :pointer
 
   class PivotJoint
-    attr_reader :struct
+    include Constraint
+    struct_accessor PivotJointStruct, :anchr1, :anchr2
     def initialize(a_body, b_body, anchr_one, anchr_two=nil)
+      @body_a, @body_b = a_body, b_body
       @struct = if anchr_two.nil?
         PivotJointStruct.new(CP.cpPivotJointNew(
           a_body.struct.pointer,b_body.struct.pointer,anchr_one.struct))

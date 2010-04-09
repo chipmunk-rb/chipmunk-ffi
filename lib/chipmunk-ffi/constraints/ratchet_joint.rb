@@ -13,8 +13,10 @@ module CP
   func :cpRatchetJointNew, [:pointer, :pointer, CP_FLOAT, CP_FLOAT], :pointer
 
   class RatchetJoint
-    attr_reader :struct
+    include Constraint
+    struct_accessor RatchetJointStruct, :angle, :phase, :ratchet
     def initialize(a_body, b_body, phase, ratchet)
+      @body_a, @body_b = a_body, b_body
       @struct = RatchetJointStruct.new(CP.cpRatchetJointNew(
         a_body.struct.pointer,b_body.struct.pointer,phase,ratchet))
     end

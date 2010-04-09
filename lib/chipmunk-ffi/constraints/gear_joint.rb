@@ -13,8 +13,10 @@ module CP
   func :cpGearJointNew, [:pointer, :pointer, CP_FLOAT, CP_FLOAT], :pointer
 
   class GearJoint
-    attr_reader :struct
+    include Constraint
+    struct_accessor GearJointStruct, :phase, :ratio
     def initialize(a_body, b_body, phase, ratio)
+      @body_a, @body_b = a_body, b_body
       @struct = GearJointStruct.new(CP.cpGearJointNew(
         a_body.struct.pointer,b_body.struct.pointer,phase, ratio))
     end

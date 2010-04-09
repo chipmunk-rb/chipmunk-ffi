@@ -1,3 +1,5 @@
+require 'chipmunk-ffi/struct_accessor'
+
 module CP
   callback :cpConstraintPreStepFunction, [:pointer, CP_FLOAT, CP_FLOAT], :void
   callback :cpConstraintApplyImpulseFunction, [:pointer], :void
@@ -20,14 +22,16 @@ module CP
   end
   
   module Constraint
-
-    
-    
     attr_reader :body_a, :body_b, :struct
+    [:max_force,:bias_coef,:max_bias].each do |sym|
+      define_method(sym) { struct.constraint[sym] }
+      define_method("#{sym}=") {|val| struct.constraint[sym] = val.to_f }
+    end
     
-  
-      
-    
+    def self.included(other)
+      super
+      other.class_eval { extend StructAccessor }
+    end
     
   end
 
