@@ -5,8 +5,8 @@ module CP
 
   class BodyStruct < NiceFFI::Struct
     layout(
-      :bodyVelocityFunc, :cpBodyVelocityFunc,
-      :bodyPositionFunc, :cpBodyPositionFunc,
+      :velocity_func, :cpBodyVelocityFunc,
+      :position_func, :cpBodyPositionFunc,
       :m, CP_FLOAT,
       :m_inv, CP_FLOAT,
       :i, CP_FLOAT,
@@ -54,9 +54,12 @@ module CP
       when 2
         ptr = CP.cpBodyNew(*args)
         @struct = BodyStruct.new ptr
+        set_data_pointer
       else
         raise "wrong number of args for Body, got #{args.size}, but expected 2"
       end
+      set_default_velocity_lambda
+      set_default_position_lambda
     end
 
     def m
@@ -192,6 +195,61 @@ module CP
 
     def update_position(dt)
       CP.cpBodyUpdatePosition(@struct.pointer,dt)
+    end
+
+    def velocity_func
+      @user_level_velocity_lambda
+    end
+    
+    def velocity_func=(l)
+      @user_level_velocity_lambda = l
+      
+      # We keep the lambda in an ivar to keep it from being GCed
+      @body_velocity_lambda = Proc.new do |body_ptr,g,dmp,dt|
+        body_struct = BodyStruct.new(body_ptr)
+        obj_id = body_struct.data.get_long(0)
+        body = ObjectSpace._id2ref(obj_id)
+        l.call(body,g,dmp,dt)
+      end
+      @struct.velocity_func = @body_velocity_lambda
+    end
+
+    def position_func
+      @user_level_position_lambda
+    end
+    
+    def position_func=(l)
+      @user_level_position_lambda = l
+      
+      # We keep the lambda in an ivar to keep it from being GCed
+      @body_position_lambda = Proc.new do |body_ptr,dt|
+        body_struct = BodyStruct.new(body_ptr)
+        obj_id = body_struct.data.get_long(0)
+        body = ObjectSpace._id2ref(obj_id)
+        l.call(body,dt)
+      end
+      @struct.position_func = @body_position_lambda
+    end
+
+    private
+    def set_data_pointer
+      mem = FFI::MemoryPointer.new(:long)
+      mem.put_long 0, object_id
+      # this is needed to prevent data corruption by GC
+      @body_pointer = mem
+      @struct.data = mem
+    end
+
+    def set_default_velocity_lambda
+      @user_level_velocity_lambda = Proc.new do |body,g,dmp,dt|
+        body.update_velocity(g,dmp,dt)
+      end
+    end
+    
+    def set_default_position_lambda
+      @user_level_position_lambda = Proc.new do |body,dt|
+        body.update_position(dt)
+      end
     end
 
   end

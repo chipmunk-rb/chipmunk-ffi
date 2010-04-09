@@ -152,5 +152,49 @@ describe 'A new Body' do
     b.v.x.should be_close(0.1,0.001)
     b.v.y.should be_close(0,0.001)
   end
+  
+  it 'can get its velocity function' do
+    b = CP::Body.new(5, 7)
+    b.apply_impulse(vec2(1,0), ZERO_VEC_2)
+    b.velocity_func.call(b,vec2(0,0), 0.5, 25)
+    b.v.x.should be_close(0.1,0.001)
+    b.v.y.should be_close(0,0.001)
+  end
+  
+  it 'can set its velocity function' do
+    b = CP::Body.new(5, 7)
+    
+    b.velocity_func = Proc.new do |body,gravity,damping,dt|
+      d = body.p - vec2(5,5)
+      g = (d * (-500.0/(d.dot(d))))
+      body.update_velocity(g,damping,dt)
+    end
+    
+    b.velocity_func.call(b,ZERO_VEC_2,0.5,25)
+    b.v.x.should be_close(1250.0,10)
+    b.v.y.should be_close(1250.0,10)
+     
+  end
+  
+  it 'can get its position function' do
+    b = CP::Body.new(5, 7)
+    b.apply_impulse(vec2(1,0), ZERO_VEC_2)
+    b.position_func.call(b,25)
+    b.p.x.should be_close(5,0.001)
+    b.p.y.should be_close(0,0.001)
+  end
+  
+  it 'can set its position function' do
+    b = CP::Body.new(5,7)
+    
+    b.position_func = Proc.new do |body,dt|
+      body.p = vec2(5,5)
+    end
+    
+    b.position_func.call(b,25)
+    b.p.should == vec2(5,5)
+  end
+  
+  
 
 end
