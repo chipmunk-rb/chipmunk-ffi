@@ -29,8 +29,6 @@ module CP
       @struct = DampedSpringStruct.new(CP.cpDampedSpringNew(
         a_body.struct.pointer,b_body.struct.pointer,anchr_one.struct,anchr_two.struct,
         rest_length, stiffness, damping))
-    #  @__default_force_func = default_force_func = @struct.spring_force_func
-    #  @__default_force_lambda = @spring_force_lambda = Proc.new {|dist| default_force_func.call(@struct,dist) }
     end
     
     
