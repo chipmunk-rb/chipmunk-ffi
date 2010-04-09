@@ -44,8 +44,11 @@ module CP
     end
     
     def spring_force_func=(l)
-      @spring_force_lambda = l
+      @spring_force_lambda = l # Keep the lambda from being GCed
       @struct.spring_force_func = @spring_force_lambda
     end
   end
 end
+
+# Alias for compatibility with chipmunk C-Ruby bindings.
+CP::Constraint::DampedSpring = CP::DampedSpring
