@@ -312,4 +312,50 @@ describe 'Constraints in chipmunk' do
       joint.rate.should == -2.0
     end
   end
+  
+  describe 'DampedRotarySpring class' do
+    it 'can be created' do
+      boda = Body.new 90, 46
+      bodb = Body.new 9, 6
+      CP::DampedRotarySpring.new(boda,bodb,3,4,5)
+    end
+        
+    it 'can get and set its rest angle' do
+      boda = CP::Body.new 90, 46
+      bodb = CP::Body.new 9, 6
+      joint = CP::DampedRotarySpring.new(boda,bodb,3,4,5)
+      joint.rest_angle.should == 3.0
+      joint.rest_angle = 1
+      joint.rest_angle.should == 1.0
+    end
+    
+    it 'can get and set its stiffness' do
+      boda = CP::Body.new 90, 46
+      bodb = CP::Body.new 9, 6
+      joint = CP::DampedRotarySpring.new(boda,bodb,3,4,5)
+      joint.stiffness.should == 4.0
+      joint.stiffness = 1
+      joint.stiffness.should == 1.0
+    end
+    
+    it 'can get and set its damping' do
+      boda = CP::Body.new 90, 46
+      bodb = CP::Body.new 9, 6
+      joint = CP::DampedRotarySpring.new(boda,bodb,3,4,5)
+      joint.damping.should == 5.0
+      joint.damping = 1
+      joint.damping.should == 1.0
+    end
+    
+    it 'can get and set its spring torque function' do
+      boda = CP::Body.new 90, 46
+      bodb = CP::Body.new 9, 6
+      joint = CP::DampedRotarySpring.new(boda,bodb,3,4,5)
+      joint.spring_torque_func.call(joint.struct,1.0).should == -8.0
+      joint.spring_torque_func = lambda {|spring,float| float + 1.0 }
+      joint.spring_torque_func.call(joint.struct,1.0).should == 2.0
+    end
+  end
+  
+  
 end
