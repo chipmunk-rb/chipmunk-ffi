@@ -44,4 +44,5 @@ module CP
   require 'chipmunk-ffi/constraints/ratchet_joint'
   require 'chipmunk-ffi/constraints/gear_joint'
   require 'chipmunk-ffi/constraints/simple_motor'
+  require 'chipmunk-ffi/constraints/damped_rotary_spring'
 end
