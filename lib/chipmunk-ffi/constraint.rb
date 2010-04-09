@@ -33,6 +33,14 @@ module CP
       other.class_eval { extend StructAccessor }
     end
     
+    def set_data_pointer
+      mem = FFI::MemoryPointer.new(:long)
+      mem.put_long 0, object_id
+      # this is needed to prevent data corruption by GC
+      @constraint_pointer = mem
+      @struct.constraint.data = mem
+    end
+    
   end
 
   require 'chipmunk-ffi/constraints/pin_joint'

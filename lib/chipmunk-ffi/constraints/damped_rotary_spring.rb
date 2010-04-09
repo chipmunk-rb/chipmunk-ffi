@@ -22,22 +22,35 @@ module CP
       @body_a, @body_b = a_body, b_body
       @struct = DampedRotarySpringStruct.new(CP.cpDampedRotarySpringNew(
         a_body.struct.pointer,b_body.struct.pointer, rest_angle, stiffness, damping))
+      set_data_pointer
+      set_initial_torque_proc        
     end
     
-    
-    # FIXME: Ideally, we'd prefer to pass DampedRotarySprings, rather than DampedRotarySpringStructs,
-    # to the user's lambda; or, better still, pass no spring at all, and allow them to refer
-    # to self. However, this means using wrapper procs in both the getter and the setter; This is dangerous
-    # in the case where the user takes a lambda recieved from a reader and supplies it to a writer
-    # Each time this happens, we get a more deeply nested chain of lambdas.
     def spring_torque_func
-      @struct.spring_torque_func
+      @user_level_torque_lambda
     end
     
     def spring_torque_func=(l)
-      @spring_torque_lambda = l # Keep the lambda from being GCed
+      @user_level_torque_lambda = l
+      
+      # We keep the lambda in an ivar to keep it from being GCed
+      @spring_torque_lambda = Proc.new do |spring_ptr,angle|
+        spring_struct = DampedRotarySpringStruct.new(spring_ptr)
+        obj_id = spring_struct.constraint.data.get_long(0)
+        spring = ObjectSpace._id2ref(obj_id)
+        l.call(spring,angle)
+      end
       @struct.spring_torque_func = @spring_torque_lambda
     end
+    
+    private
+    def set_initial_torque_proc
+      ffi_func = @struct.spring_torque_func
+      @user_level_torque_lambda ||= Proc.new do |spring, angle|
+        ffi_func.call(spring.struct,angle)
+      end
+    end
+    
   end
 end
 
