@@ -85,6 +85,7 @@ module CP
       @constraints = []
       @blocks = {}
       @callbacks = {}
+      @test_callbacks = Hash.new {|h,k| h[k] = {:begin => nil, :pre => nil, :post => nil, :sep => nil}}
     end
     
     def iterations
@@ -115,58 +116,58 @@ module CP
       @struct.gravity.pointer.put_bytes 0, v.struct.to_bytes, 0,Vect.size
     end
 
-    def add_collision_func(a,b,&block)
-      beg = nil
-      pre = nil
-      unless block.nil?
-        pre = Proc.new do |arb_ptr,space_ptr,data_ptr|
-          begin
-            arb = ArbiterStruct.new(arb_ptr)
+    #def add_collision_func(a,b,&block)
+    #  beg = nil
+    #  pre = nil
+    #  unless block.nil?
+    #    pre = Proc.new do |arb_ptr,space_ptr,data_ptr|
+    #      begin
+    #        arb = ArbiterStruct.new(arb_ptr)
+    #
+    #        swapped = arb.swapped_col == 0 ? false : true
+    #        arba = swapped ? arb.b : arb.a
+    #        arbb = swapped ? arb.a : arb.b
+    #
+    #        as = ShapeStruct.new(arba)
+    #        a_obj_id = as.data.get_long 0
+    #        rb_a = ObjectSpace._id2ref a_obj_id
+    #
+    #        bs = ShapeStruct.new(arbb)
+    #        b_obj_id = bs.data.get_long 0
+    #        rb_b = ObjectSpace._id2ref b_obj_id
+    #
+    #        block.call rb_a, rb_b
+    #        1
+    #      rescue Exception => ex
+    #        puts ex.message
+    #        puts ex.backtrace
+    #        0
+    #      end
+    #    end
+    #  else
+    #    # needed for old chipmunk style 
+    #    pre = Proc.new do |arb_ptr,space_ptr,data_ptr|
+    #      0
+    #    end
+    #  end
+    #  post = nil
+    #  sep = nil
+    #  data = nil
+    #  a_id = a.object_id
+    #  b_id = b.object_id
+    #  CP.cpSpaceAddCollisionHandler(@struct.pointer, a_id, b_id,
+    #      beg,pre,post,sep,data)
+    #  @blocks[[a_id,b_id]] = pre
+    #  nil
+    #end
 
-            swapped = arb.swapped_col == 0 ? false : true
-            arba = swapped ? arb.b : arb.a
-            arbb = swapped ? arb.a : arb.b
-
-            as = ShapeStruct.new(arba)
-            a_obj_id = as.data.get_long 0
-            rb_a = ObjectSpace._id2ref a_obj_id
-
-            bs = ShapeStruct.new(arbb)
-            b_obj_id = bs.data.get_long 0
-            rb_b = ObjectSpace._id2ref b_obj_id
-
-            block.call rb_a, rb_b
-            1
-          rescue Exception => ex
-            puts ex.message
-            puts ex.backtrace
-            0
-          end
-        end
-      else
-        # needed for old chipmunk style 
-        pre = Proc.new do |arb_ptr,space_ptr,data_ptr|
-          0
-        end
-      end
-      post = nil
-      sep = nil
-      data = nil
-      a_id = a.object_id
-      b_id = b.object_id
-      CP.cpSpaceAddCollisionHandler(@struct.pointer, a_id, b_id,
-          beg,pre,post,sep,data)
-      @blocks[[a_id,b_id]] = pre
-      nil
-    end
-
-    def remove_collision_func(a,b)
-      a_id = a.object_id
-      b_id = b.object_id
-      CP.cpSpaceRemoveCollisionHandler(@struct.pointer, a_id, b_id)
-      @blocks.delete [a_id,b_id]
-      nil
-    end
+    #def remove_collision_func(a,b)
+    #  a_id = a.object_id
+    #  b_id = b.object_id
+    #  CP.cpSpaceRemoveCollisionHandler(@struct.pointer, a_id, b_id)
+    #  @blocks.delete [a_id,b_id]
+    #  nil
+    #end
 
     def set_default_collision_func(&block)
       raise "Not Implmented yet"
@@ -187,6 +188,7 @@ module CP
         ret ? 1 : 0
       end
       @callbacks[[a,b,type]] = [handler,callback]
+      @test_callbacks[[a,b]][type] = callback
       callback
     end
 
@@ -203,6 +205,35 @@ module CP
 
       CP.cpSpaceAddCollisionHandler(@struct.pointer, 
         a_id, b_id, beg,pre,post,sep,data)
+    end
+
+    def add_collision_func(a,b,type=:pre,&block)
+      arity = block.arity
+      callback = Proc.new do |arb_ptr,space_ptr,data_ptr|
+        arbiter = Arbiter.new(arb_ptr)
+        ret = case arity
+        when 1 then block.call(arbiter)
+        when 2 then block.call(*arbiter.shapes)
+        when 3 then block.call(arbiter,*arbiter.shapes)
+        else raise ArgumentError
+        end
+        ret ? 1 : 0
+      end
+      @test_callbacks[[a,b]][type] = callback
+      setup_callbacks(a,b)
+    end
+
+    def remove_collision_func(a,b,type=:pre)
+      @test_callbacks[[a,b]][type] = nil
+      setup_callbacks(a,b)
+    end
+
+    def setup_callbacks(a,b)
+      a_id = a.object_id
+      b_id = b.object_id
+      cbs = @test_callbacks[[a,b]]
+      CP.cpSpaceAddCollisionHandler(@struct.pointer,a_id,b_id,
+      cbs[:begin],cbs[:pre],cbs[:post],cbs[:sep],nil)
     end
 
     def add_shape(shape)
