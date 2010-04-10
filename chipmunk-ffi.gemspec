@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{chipmunk-ffi}
-  s.version = "1.0.0"
+  s.version = "1.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Shawn Anderson"]
-  s.date = %q{2010-01-04}
+  s.date = %q{2010-04-10}
   s.description = %q{FFI bindings for chipmunk physics lib.}
   s.email = %q{shawn42@gmail.com}
   s.extra_rdoc_files = [
@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
      "lib/chipmunk-ffi/bb.rb",
      "lib/chipmunk-ffi/body.rb",
      "lib/chipmunk-ffi/constraint.rb",
+     "lib/chipmunk-ffi/constraints/damped_rotary_spring.rb",
      "lib/chipmunk-ffi/constraints/damped_spring.rb",
      "lib/chipmunk-ffi/constraints/gear_joint.rb",
      "lib/chipmunk-ffi/constraints/groove_joint.rb",
@@ -38,6 +39,7 @@ Gem::Specification.new do |s|
      "lib/chipmunk-ffi/shape.rb",
      "lib/chipmunk-ffi/space.rb",
      "lib/chipmunk-ffi/space_hash.rb",
+     "lib/chipmunk-ffi/struct_accessor.rb",
      "lib/chipmunk-ffi/unsafe.rb",
      "lib/chipmunk-ffi/vec2.rb",
      "spec/bb_spec.rb",
@@ -56,7 +58,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{chipmunk-ffi}
-  s.rubygems_version = %q{1.3.5}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{FFI bindings for chipmunk physics lib.}
   s.test_files = [
     "spec/bb_spec.rb",

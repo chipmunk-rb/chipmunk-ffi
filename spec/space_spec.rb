@@ -189,7 +189,7 @@ describe 'Shape in chipmunk' do
     all_ones = 2**32-1
 		
     shapes = []
-    space.segment_query(vec2(100,100),vec2(-100,-100), all_ones,0) do |shape|
+    space.segment_query(vec2(100,100),vec2(-100,-100), all_ones,0) do |shape, t, n|
       shapes << shape
     end
     

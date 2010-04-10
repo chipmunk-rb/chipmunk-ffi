@@ -14,9 +14,9 @@ Install
 
 You will need:
 
-* Ruby 1.8.6+ or JRuby 1.4+
-* Chipmunk > 5.0 (svn right now... http://code.google.com/p/chipmunk-physics/ )
-* FFI > 0.6.0 (git right now... http://github.com/ffi/ffi/ )
+* Ruby 1.8.6+ or JRuby 1.5+
+* Chipmunk > 5.2 
+* FFI > 0.6.0 
 
 Then...
 
@@ -34,3 +34,4 @@ Author
 ------
 
 Shawn Anderson <shawn42+chipmunk@gmail.com>
+Philomory http://github.com/philomory 
