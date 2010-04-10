@@ -195,6 +195,10 @@ module CP
       CP::cpvlength @struct
     end
 
+    def ==(other)
+      self.x == other.x && self.y == other.y
+    end
+
   end
   ZERO_VEC_2 = Vec2.new(0,0).freeze
   def zero
