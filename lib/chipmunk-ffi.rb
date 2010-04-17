@@ -4,7 +4,11 @@ require 'nice-ffi'
 module CP
   extend NiceFFI::Library
 
-
+  if RUBY_PLATFORM == "java"
+    require 'jruby'
+    JRuby.objectspace=true
+  end
+    
   unless defined? CP::LOAD_PATHS
     # Check if the application has defined CP_PATHS with some
     # paths to check first for chipmunk library.
