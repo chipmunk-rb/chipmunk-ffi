@@ -365,7 +365,7 @@ module CP
       out_ptr = FFI::MemoryPointer.new(SegmentQueryInfoStruct.size)
       info = SegmentQueryInfoStruct.new out_ptr
 
-      shape_ptr = CP.cpSpaceSegmentQueryFirst(@struct.pointer, a.struct.pointer, b.struct.pointer,layers,group,out_ptr)
+      shape_ptr = CP.cpSpaceSegmentQueryFirst(@struct.pointer, a.struct, b.struct,layers,group,out_ptr)
       if shape_ptr.null?
         SegmentQueryInfo.new(false,nil,nil,nil,info)
       else
