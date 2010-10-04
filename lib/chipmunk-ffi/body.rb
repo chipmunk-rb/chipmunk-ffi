@@ -4,26 +4,49 @@ module CP
   callback :cpBodyPositionFunc, [:pointer, CP_FLOAT], :void
 
   class BodyStruct < NiceFFI::Struct
-    layout(
-      :velocity_func, :cpBodyVelocityFunc,
-      :position_func, :cpBodyPositionFunc,
-      :m, CP_FLOAT,
-      :m_inv, CP_FLOAT,
-      :i, CP_FLOAT,
-      :i_inv, CP_FLOAT,
-      :p, Vect,
-      :v, Vect,
-      :f, Vect,
-      :a, CP_FLOAT,
-      :w, CP_FLOAT,
-      :t, CP_FLOAT,
-      :rot, Vect,
-      :data, :pointer,
-      :v_limit, CP_FLOAT,
-      :w_limit, CP_FLOAT,
-      :v_bias, Vect,
-      :w_bias, CP_FLOAT
-    )
+    if CP::VERSION < '5.3.1'
+      layout(
+        :velocity_func, :cpBodyVelocityFunc,
+        :position_func, :cpBodyPositionFunc,
+        :m, CP_FLOAT,
+        :m_inv, CP_FLOAT,
+        :i, CP_FLOAT,
+        :i_inv, CP_FLOAT,
+        :p, Vect,
+        :v, Vect,
+        :f, Vect,
+        :a, CP_FLOAT,
+        :w, CP_FLOAT,
+        :t, CP_FLOAT,
+        :rot, Vect,
+        :data, :pointer,
+        :v_limit, CP_FLOAT,
+        :w_limit, CP_FLOAT,
+        :v_bias, Vect,
+        :w_bias, CP_FLOAT
+      )
+    else
+      layout(
+        :velocity_func, :cpBodyVelocityFunc,
+        :position_func, :cpBodyPositionFunc,
+        :m, CP_FLOAT,
+        :m_inv, CP_FLOAT,
+        :i, CP_FLOAT,
+        :i_inv, CP_FLOAT,
+        :p, Vect,
+        :v, Vect,
+        :f, Vect,
+        :a, CP_FLOAT,
+        :w, CP_FLOAT,
+        :t, CP_FLOAT,
+        :rot, Vect,
+        :v_limit, CP_FLOAT,
+        :w_limit, CP_FLOAT,
+        :data, :pointer,
+        :v_bias, Vect,
+        :w_bias, CP_FLOAT
+      )
+    end
 
     def self.release(me)
       # TODO is this right?
