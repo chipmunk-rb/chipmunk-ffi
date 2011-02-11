@@ -45,6 +45,7 @@ module CP
 
 
   func :cpCircleShapeNew, [BodyStruct,CP_FLOAT,Vect.by_value], ShapeStruct
+	func :cpCircleShapeGetRadius, [ShapeStruct], CP_FLOAT
   func :cpSegmentShapeNew, [BodyStruct,Vect.by_value,Vect.by_value,CP_FLOAT], ShapeStruct
   func :cpPolyShapeNew, [BodyStruct,:int,:pointer,Vect.by_value], ShapeStruct
   func :cpShapeCacheBB, [ShapeStruct], :void
@@ -186,6 +187,10 @@ module CP
         ptr = CP.cpCircleShapeNew body.struct.pointer, rad, offset_vec.struct
         @struct = ShapeStruct.new ptr
         set_data_pointer
+      end
+      
+      def radius
+		CP.cpCircleShapeGetRadius(@struct.pointer)
       end
     end
     class Segment
