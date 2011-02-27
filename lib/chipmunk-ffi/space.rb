@@ -9,6 +9,7 @@ module CP
   callback :cpCollisionSeparateFunc, [:pointer,:pointer,:pointer], :int
 	callback :cpSpacePointQueryFunc, [:pointer,:pointer], :void
 	callback :cpSpaceSegmentQueryFunc, [:pointer, :float, Vect.by_value, :pointer], :void
+	callback :cpSpaceBBQueryFunc, [:pointer,:pointer], :void
 
   class CollisionHandlerStruct < NiceFFI::Struct
     layout(
@@ -74,6 +75,8 @@ module CP
 
   func :cpSpaceSegmentQuery, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :cpSpaceSegmentQueryFunc, :pointer], :int
   func :cpSpaceSegmentQueryFirst, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :pointer], :pointer
+  
+  func :cpSpaceBBQuery, [:pointer, :pointer, :uint, :uint, :cpSpaceBBQueryFunc, :pointer], :void
 
   class Space 
     attr_reader :struct
@@ -387,6 +390,17 @@ module CP
       end
       
       CP.cpSpaceSegmentQuery(@struct.pointer, a.struct, b.struct, layers, group, query_proc, nil)
+    end
+    
+    def bb_query(bb, layers, group, &block)
+		query_proc = Proc.new do |shape_ptr, data|
+			shape_struct = ShapeStruct.new(shape_ptr)
+			obj_id = shape_struct.data.get_long(0)
+	        shape = ObjectSpace._id2ref(obj_id)
+	        block.call(shape)
+		end
+    
+		CP.cpSpaceBBQuery(@struct.pointer, bb.struct, layers, group, query_proc ,nil)
     end
 
   end
