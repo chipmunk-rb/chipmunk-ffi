@@ -59,6 +59,10 @@ module CP
   func :cpBodyUpdatePosition, [BodyStruct,CP_FLOAT], :void
   func :cpBodyApplyForce, [:pointer, Vect.by_value, Vect.by_value], :void
   func :cpBodyResetForces, [:pointer], :void
+  
+  func :cpBodyIsStatic, [BodyStruct], :pointer
+  func :cpBodyIsRogue, [BodyStruct], :pointer
+  func :cpBodyIsSleeping, [BodyStruct], :pointer
 
   cp_static_inline :cpBodyLocal2World, [:pointer, Vect.by_value], Vect.by_value
   cp_static_inline :cpBodyWorld2Local, [:pointer, Vect.by_value], Vect.by_value
@@ -191,7 +195,19 @@ module CP
     end
     alias :ang_vel_limit  :w_limit
     alias :ang_vel_limit= :w_limit=
-
+	
+	def static?
+		CP.cpBodyIsStatic(@struct.pointer)
+	end
+	
+	def rogue?
+		CP.cpBodyIsRogue(@struct.pointer)
+	end
+	
+	def sleeping?
+		CP.cpBodyIsSleeping(@struct.pointer)
+	end
+	
     def local2world(v)
       Vec2.new CP.cpBodyLocal2World(@struct.pointer,v.struct)
     end
