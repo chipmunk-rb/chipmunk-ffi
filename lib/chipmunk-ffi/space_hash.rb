@@ -15,9 +15,9 @@ module CP
            :stamp, :int)
   end
   func :cpSpaceHashNew,  [CP_FLOAT,:int,:cpSpaceHashBBFunc], :pointer
-  func :cpSpaceHashQuery, [:pointer, :pointer, BBStruct.by_value, :cpSpaceHashQueryFunc, :pointer], :void
-  func :cpSpaceHashInsert, [:pointer, :pointer, :uint, BBStruct.by_value], :void
-  func :cpSpaceHashRemove, [:pointer, :pointer, :uint], :void
+  #func :cpSpaceHashQuery, [:pointer, :pointer, BBStruct.by_value, :cpSpaceHashQueryFunc, :pointer], :void #TODO
+  #func :cpSpaceHashInsert, [:pointer, :pointer, :uint, BBStruct.by_value], :void #TODO
+  #func :cpSpaceHashRemove, [:pointer, :pointer, :uint], :void #TODO
 
   class SpaceHash
     attr_reader :struct

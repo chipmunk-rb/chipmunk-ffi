@@ -2,8 +2,8 @@ module CP
   # FIXME tell Scott Lembcke that this function is missing from chipmunk_ffi.h
   # cp_static_inline :cpArbiterIsFirstContact, [:pointer], :int
   
-  cp_static_inline :cpArbiterGetNormal, [:pointer, :int], Vect.by_value
-  cp_static_inline :cpArbiterGetPoint, [:pointer, :int], Vect.by_value
+  func :cpArbiterGetNormal, [:pointer, :int], Vect.by_value
+  func :cpArbiterGetPoint, [:pointer, :int], Vect.by_value
   
   func :cpArbiterTotalImpulse, [:pointer], Vect.by_value
   func :cpArbiterTotalImpulseWithFriction, [:pointer], Vect.by_value

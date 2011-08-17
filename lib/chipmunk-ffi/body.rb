@@ -60,13 +60,13 @@ module CP
   func :cpBodyApplyForce, [:pointer, Vect.by_value, Vect.by_value], :void
   func :cpBodyResetForces, [:pointer], :void
   
-  func :cpBodyIsStatic, [BodyStruct], :pointer
-  func :cpBodyIsRogue, [BodyStruct], :pointer
-  func :cpBodyIsSleeping, [BodyStruct], :pointer
+  cp_static_inline :cpBodyIsStatic, [BodyStruct.by_value], :int
+  cp_static_inline :cpBodyIsRogue, [BodyStruct.by_value], :int
+  cp_static_inline :cpBodyIsSleeping, [BodyStruct.by_value], :int
 
   cp_static_inline :cpBodyLocal2World, [:pointer, Vect.by_value], Vect.by_value
   cp_static_inline :cpBodyWorld2Local, [:pointer, Vect.by_value], Vect.by_value
-  cp_static_inline :cpBodyApplyImpulse, [:pointer, Vect.by_value, Vect.by_value], :void
+  func :cpBodyApplyImpulse, [:pointer, Vect.by_value, Vect.by_value], :void
 
   func :cpBodySetMass, [:pointer, CP_FLOAT], :void
   func :cpBodySetMoment, [:pointer, CP_FLOAT], :void
