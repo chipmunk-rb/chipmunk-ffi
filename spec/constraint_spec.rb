@@ -31,12 +31,12 @@ describe 'Constraints in chipmunk' do
       joint.max_bias.should == 40.0
     end
     
-    it 'can set and get its bias_coef' do
+    it 'can set and get its error_bias' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
       joint = CP::PinJoint.new(boda,bodb,ZERO_VEC_2,ZERO_VEC_2)
-      joint.bias_coef = 40
-      joint.bias_coef.should == 40.0
+      joint.error_bias = 0.001
+      joint.error_bias.should == 0.001
     end
     
     it 'can get and set its anchors' do
@@ -157,7 +157,7 @@ describe 'Constraints in chipmunk' do
       bodb = Body.new 9, 6
       CP::DampedSpring.new(boda,bodb,ZERO_VEC_2,ZERO_VEC_2,3,4,5)
     end
-    
+
     it 'can get and set its anchors' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
@@ -165,7 +165,7 @@ describe 'Constraints in chipmunk' do
       v2 = vec2(3,4)
       v3 = vec2(5,6)
       v4 = vec2(7,8)
-      
+
       joint = CP::DampedSpring.new(boda,bodb,v1,v2,3,4,5)
       joint.anchr1.should == v1
       joint.anchr2.should == v2
@@ -175,7 +175,7 @@ describe 'Constraints in chipmunk' do
       joint.anchr1.should == v3
       joint.anchr2.should == v4
     end
-    
+
     it 'can get and set its rest length' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
@@ -184,7 +184,7 @@ describe 'Constraints in chipmunk' do
       joint.rest_length = 1
       joint.rest_length.should == 1.0
     end
-    
+
     it 'can get and set its stiffness' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
@@ -193,7 +193,7 @@ describe 'Constraints in chipmunk' do
       joint.stiffness = 1
       joint.stiffness.should == 1.0
     end
-    
+
     it 'can get and set its damping' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
@@ -202,7 +202,7 @@ describe 'Constraints in chipmunk' do
       joint.damping = 1
       joint.damping.should == 1.0
     end
-    
+
     it 'can get and set its spring force function' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
@@ -219,7 +219,7 @@ describe 'Constraints in chipmunk' do
       bodb = Body.new 9, 6
       CP::RotaryLimitJoint.new(boda,bodb,Math::PI,Math::PI/2)
     end
-    
+
     it 'can get and set min and max' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
@@ -239,7 +239,7 @@ describe 'Constraints in chipmunk' do
       bodb = Body.new 9, 6
       CP::RatchetJoint.new(boda,bodb,3,4)
     end
-    
+
     it 'can get and set its angle' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
@@ -248,7 +248,7 @@ describe 'Constraints in chipmunk' do
       joint.angle = Math::PI/2
       joint.angle.should == Math::PI/2
     end
-    
+
     it 'can get and set its phase' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
@@ -257,7 +257,7 @@ describe 'Constraints in chipmunk' do
       joint.phase = 5.0
       joint.phase.should == 5.0
     end
-    
+
     it 'can get and set its ratchet' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
@@ -266,16 +266,16 @@ describe 'Constraints in chipmunk' do
       joint.ratchet = 6.0
       joint.ratchet.should == 6.0
     end
-    
+
   end
-  
+
   describe 'GearJoint class' do
     it 'can be created' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
       CP::GearJoint.new(boda,bodb,1,2)
     end
-    
+
     it 'can get and set its phase' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
@@ -284,7 +284,7 @@ describe 'Constraints in chipmunk' do
       joint.phase = 5.0
       joint.phase.should == 5.0
     end
-    
+
     it 'can get and set its ratio' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
@@ -303,7 +303,7 @@ describe 'Constraints in chipmunk' do
       bodb = Body.new 9, 6
       CP::SimpleMotor.new(boda,bodb,2)
     end
-    
+
     it 'can get and set its rate' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
@@ -313,14 +313,14 @@ describe 'Constraints in chipmunk' do
       joint.rate.should == -2.0
     end
   end
-  
+
   describe 'DampedRotarySpring class' do
     it 'can be created' do
       boda = Body.new 90, 46
       bodb = Body.new 9, 6
       CP::DampedRotarySpring.new(boda,bodb,3,4,5)
     end
-        
+
     it 'can get and set its rest angle' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
@@ -329,7 +329,7 @@ describe 'Constraints in chipmunk' do
       joint.rest_angle = 1
       joint.rest_angle.should == 1.0
     end
-    
+
     it 'can get and set its stiffness' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
@@ -338,7 +338,7 @@ describe 'Constraints in chipmunk' do
       joint.stiffness = 1
       joint.stiffness.should == 1.0
     end
-    
+
     it 'can get and set its damping' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
@@ -347,7 +347,7 @@ describe 'Constraints in chipmunk' do
       joint.damping = 1
       joint.damping.should == 1.0
     end
-    
+
     it 'can get and set its spring torque function' do
       boda = CP::Body.new 90, 46
       bodb = CP::Body.new 9, 6
@@ -357,6 +357,6 @@ describe 'Constraints in chipmunk' do
       joint.spring_torque_func.call(joint,1.0).should == 2.0
     end
   end
-  
-  
+
+
 end
