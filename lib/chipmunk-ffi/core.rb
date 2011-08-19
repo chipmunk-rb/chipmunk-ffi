@@ -7,21 +7,21 @@ module CP
   end
   VERSION = version.freeze
 
-  attach_variable :cp_bias_coef, CP_FLOAT
-  def bias_coef
-    cp_bias_coef
-  end
-  def bias_coef=(coef)
-    cp_bias_coef = coef
-  end
+  #attach_variable :cp_bias_coef, CP_FLOAT
+  #def bias_coef
+  #  cp_bias_coef
+  #end
+  #def bias_coef=(coef)
+  #  cp_bias_coef = coef
+  #end
 
-  attach_variable :cp_collision_slop, CP_FLOAT
-  def collision_slop
-    cp_collision_slop
-  end
-  def collision_slop=(slop)
-    cp_collision_slop = slop
-  end
+  #attach_variable :cp_collision_slop, CP_FLOAT
+  #def collision_slop
+  #  cp_collision_slop
+  #end
+  #def collision_slop=(slop)
+  #  cp_collision_slop = slop
+  #end
 
   func :cpMomentForCircle, [CP_FLOAT,CP_FLOAT,CP_FLOAT,Vect.by_value], CP_FLOAT
   def self.moment_for_circle(m,r1,r2,offset)

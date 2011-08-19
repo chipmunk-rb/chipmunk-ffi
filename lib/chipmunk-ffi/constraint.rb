@@ -1,29 +1,39 @@
 require 'chipmunk-ffi/struct_accessor'
 
 module CP
-  callback :cpConstraintPreStepFunction, [:pointer, CP_FLOAT, CP_FLOAT], :void
-  callback :cpConstraintApplyImpulseFunction, [:pointer], :void
-  callback :cpConstraintGetImpulseFunction, [:pointer], CP_FLOAT
+  callback :cpConstraintPreStepFunc, [:pointer, CP_FLOAT], :void
+  callback :cpConstraintApplyCachedImpulseFunc, [:pointer, CP_FLOAT], :void
+  callback :cpConstraintApplyImpulseFunc, [:pointer], :void
+  callback :cpConstraintGetImpulseFunc, [:pointer], CP_FLOAT
 
   class ConstraintClassStruct < NiceFFI::Struct
-    layout(:pre_step, :cpConstraintPreStepFunction,
-      :apply_impluse, :cpConstraintApplyImpulseFunction,
-      :getImpulse, :cpConstraintGetImpulseFunction)
+    layout(:pre_step, :cpConstraintPreStepFunc,
+           :apply_cached_impulse, :cpConstraintApplyCachedImpulseFunc,
+           :apply_impulse, :cpConstraintApplyImpulseFunc,
+           :getImpulse, :cpConstraintGetImpulseFunc)
   end
+
+  callback :cpConstraintPreSolveFunc, [:pointer, :pointer], :void
+  callback :cpConstraintPostSolveFunc, [:pointer, :pointer], :void
 
   class ConstraintStruct < NiceFFI::Struct
     layout(:klass, :pointer,
            :a, :pointer,
            :b, :pointer,
+           :space, :pointer,
+           :next_a, :pointer,
+           :next_b, :pointer,
            :max_force, CP_FLOAT,
-           :bias_coef, CP_FLOAT,
+           :error_bias, CP_FLOAT,
            :max_bias, CP_FLOAT,
+           :pre_solve, :cpConstraintPreSolveFunc,
+           :post_solve, :cpConstraintPostSolveFunc,
            :data, :pointer)
   end
   
   module Constraint
     attr_reader :body_a, :body_b, :struct
-    [:max_force,:bias_coef,:max_bias].each do |sym|
+    [:max_force,:error_bias,:max_bias].each do |sym|
       define_method(sym) { struct.constraint[sym] }
       define_method("#{sym}=") {|val| struct.constraint[sym] = val.to_f }
     end

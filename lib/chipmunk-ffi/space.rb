@@ -9,6 +9,7 @@ module CP
   callback :cpCollisionSeparateFunc, [:pointer,:pointer,:pointer], :int
 	callback :cpSpacePointQueryFunc, [:pointer,:pointer], :void
 	callback :cpSpaceSegmentQueryFunc, [:pointer, :float, Vect.by_value, :pointer], :void
+	callback :cpSpaceBBQueryFunc, [:pointer,:pointer], :void
 
   class CollisionHandlerStruct < NiceFFI::Struct
     layout(
@@ -37,15 +38,17 @@ module CP
       :constraints, :pointer,
       :coll_func_set, :pointer,
       :default_handler, CollisionHandlerStruct.by_value,
-      :post_step_callbacks, :pointer
+      :post_step_callbacks, :pointer,
+      :collisionBias, CP_FLOAT,
+      :collisionSlop, CP_FLOAT
     )
     def self.release(ptr)
-      CP.cpSpaceFreeChildren(ptr)
+      CP.cpSpaceFree(ptr)
     end
   end
 
   func :cpSpaceNew, [], :pointer
-  func :cpSpaceFreeChildren, [:pointer], :void
+  func :cpSpaceFree, [:pointer], :void
   
   func :cpSpaceAddShape, [:pointer, :pointer], :pointer
   func :cpSpaceAddStaticShape, [:pointer, :pointer], :pointer
@@ -57,10 +60,10 @@ module CP
   func :cpSpaceRemoveBody, [:pointer, :pointer], :void
   func :cpSpaceRemoveConstraint, [:pointer, :pointer], :void
 
-  func :cpSpaceRehashStatic, [:pointer], :void
+  #func :cpSpaceRehashStatic, [:pointer], :void  #TODO
   func :cpSpaceStep, [:pointer,:double], :void
-  func :cpSpaceResizeActiveHash, [:pointer,CP_FLOAT,:int], :void
-  func :cpSpaceResizeStaticHash, [:pointer,CP_FLOAT,:int], :void
+  #func :cpSpaceResizeActiveHash, [:pointer,CP_FLOAT,:int], :void #TODO
+  #func :cpSpaceResizeStaticHash, [:pointer,CP_FLOAT,:int], :void #TODO
 
 
   func :cpSpaceSetDefaultCollisionHandler, [:pointer, :uint, :uint,
@@ -74,6 +77,10 @@ module CP
 
   func :cpSpaceSegmentQuery, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :cpSpaceSegmentQueryFunc, :pointer], :int
   func :cpSpaceSegmentQueryFirst, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :pointer], :pointer
+  
+  func :cpSpaceBBQuery, [:pointer, :pointer, :uint, :uint, :cpSpaceBBQueryFunc, :pointer], :void
+
+
 
   class Space 
     attr_reader :struct
@@ -387,6 +394,17 @@ module CP
       end
       
       CP.cpSpaceSegmentQuery(@struct.pointer, a.struct, b.struct, layers, group, query_proc, nil)
+    end
+    
+    def bb_query(bb, layers, group, &block)
+		query_proc = Proc.new do |shape_ptr, data|
+			shape_struct = ShapeStruct.new(shape_ptr)
+			obj_id = shape_struct.data.get_long(0)
+	        shape = ObjectSpace._id2ref(obj_id)
+	        block.call(shape)
+		end
+    
+		CP.cpSpaceBBQuery(@struct.pointer, bb.struct, layers, group, query_proc ,nil)
     end
 
   end
