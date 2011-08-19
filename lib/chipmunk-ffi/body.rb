@@ -4,53 +4,32 @@ module CP
   callback :cpBodyPositionFunc, [:pointer, CP_FLOAT], :void
 
   class BodyStruct < NiceFFI::Struct
-    if CP::VERSION < '5.3.1'
-      layout(
-        :velocity_func, :cpBodyVelocityFunc,
-        :position_func, :cpBodyPositionFunc,
-        :m, CP_FLOAT,
-        :m_inv, CP_FLOAT,
-        :i, CP_FLOAT,
-        :i_inv, CP_FLOAT,
-        :p, Vect,
-        :v, Vect,
-        :f, Vect,
-        :a, CP_FLOAT,
-        :w, CP_FLOAT,
-        :t, CP_FLOAT,
-        :rot, Vect,
-        :data, :pointer,
-        :v_limit, CP_FLOAT,
-        :w_limit, CP_FLOAT,
-        :v_bias, Vect,
-        :w_bias, CP_FLOAT
-      )
-    else
-      layout(
-        :velocity_func, :cpBodyVelocityFunc,
-        :position_func, :cpBodyPositionFunc,
-        :m, CP_FLOAT,
-        :m_inv, CP_FLOAT,
-        :i, CP_FLOAT,
-        :i_inv, CP_FLOAT,
-        :p, Vect,
-        :v, Vect,
-        :f, Vect,
-        :a, CP_FLOAT,
-        :w, CP_FLOAT,
-        :t, CP_FLOAT,
-        :rot, Vect,
-        :v_limit, CP_FLOAT,
-        :w_limit, CP_FLOAT,
-        :data, :pointer,
-        :v_bias, Vect,
-        :w_bias, CP_FLOAT
-      )
-    end
+    layout(
+      :velocity_func, :cpBodyVelocityFunc,
+      :position_func, :cpBodyPositionFunc,
+      :m, CP_FLOAT,
+      :m_inv, CP_FLOAT,
+      :i, CP_FLOAT,
+      :i_inv, CP_FLOAT,
+      :p, Vect,
+      :v, Vect,
+      :f, Vect,
+      :a, CP_FLOAT,
+      :w, CP_FLOAT,
+      :t, CP_FLOAT,
+      :rot, Vect,
+      :data, :pointer,
+      :v_limit, CP_FLOAT,
+      :w_limit, CP_FLOAT
+      #:v_bias, Vect,
+      #:w_bias, CP_FLOAT,
+      #:space, SpaceStruct, #TODO check
+      #:shape_list, ShapeStruct #TODO check
+    )
 
     def self.release(me)
       # TODO is this right?
-      CP.cpBodyDestroy me
+      CP.cpBodyFree me
     end
   end
   func :cpBodyNew, [CP_FLOAT, CP_FLOAT], BodyStruct
@@ -59,10 +38,14 @@ module CP
   func :cpBodyUpdatePosition, [BodyStruct,CP_FLOAT], :void
   func :cpBodyApplyForce, [:pointer, Vect.by_value, Vect.by_value], :void
   func :cpBodyResetForces, [:pointer], :void
+  
+  cp_static_inline :cpBodyIsStatic, [BodyStruct.by_value], :int
+  cp_static_inline :cpBodyIsRogue, [BodyStruct.by_value], :int
+  cp_static_inline :cpBodyIsSleeping, [BodyStruct.by_value], :int
 
   cp_static_inline :cpBodyLocal2World, [:pointer, Vect.by_value], Vect.by_value
   cp_static_inline :cpBodyWorld2Local, [:pointer, Vect.by_value], Vect.by_value
-  cp_static_inline :cpBodyApplyImpulse, [:pointer, Vect.by_value, Vect.by_value], :void
+  func :cpBodyApplyImpulse, [:pointer, Vect.by_value, Vect.by_value], :void
 
   func :cpBodySetMass, [:pointer, CP_FLOAT], :void
   func :cpBodySetMoment, [:pointer, CP_FLOAT], :void
@@ -191,7 +174,19 @@ module CP
     end
     alias :ang_vel_limit  :w_limit
     alias :ang_vel_limit= :w_limit=
-
+	
+	def static?
+		CP.cpBodyIsStatic(@struct.pointer)
+	end
+	
+	def rogue?
+		CP.cpBodyIsRogue(@struct.pointer)
+	end
+	
+	def sleeping?
+		CP.cpBodyIsSleeping(@struct.pointer)
+	end
+	
     def local2world(v)
       Vec2.new CP.cpBodyLocal2World(@struct.pointer,v.struct)
     end
