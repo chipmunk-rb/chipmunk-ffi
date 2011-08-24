@@ -88,12 +88,13 @@ describe 'ShapeStruct in chipmunk' do
     end
   end
 
-  describe 'Segment class' do #TODO fix specs for Segment and Poly
+  describe 'Segment class' do
     it 'can be created' do
       bod = CP::Body.new 90, 76
       s = CP::Shape::Segment.new bod, vec2(1,1), vec2(2,2), 5
     end
   end
+
   describe 'Poly class' do
     it 'can be created' do
       bod = CP::Body.new 90, 76

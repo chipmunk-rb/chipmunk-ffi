@@ -21,7 +21,7 @@ module CP
   class ShapeStruct < NiceFFI::Struct
     layout :klass, :pointer,
            :body, :pointer,
-           :bb, BBStruct.by_value,
+           :bb, BBStruct,
            :sensor, :int,
            :e, CP_FLOAT,
            :u, CP_FLOAT,
@@ -46,11 +46,23 @@ module CP
   end
 
   class CircleShapeStruct < NiceFFI::Struct
-    layout :shape, ShapeStruct.by_value,
+    layout :shape, ShapeStruct,
            :c, VECT,
            :tc, VECT,
            :r, CP_FLOAT
   end
+
+  class SegmentShapeStruct < NiceFFI::Struct
+    layout :shape, ShapeStruct,
+           :a, VECT,
+           :b, VECT,
+           :n, VECT,
+           :ta, VECT,
+           :tb, VECT,
+           :tn, VECT,
+           :r, CP_FLOAT
+  end
+
 
   func :cpCircleShapeNew, [BodyStruct,CP_FLOAT, VECT], ShapeStruct
 	func :cpCircleShapeGetRadius, [ShapeStruct], CP_FLOAT
@@ -76,11 +88,18 @@ module CP
 
     attr_reader :struct
 
-    def initialize(struct)
+    def initialize(body, struct)
       super()
+      @body = body
       @struct = struct
       @shape_struct = struct.shape
-      @collType = @struct.shape.collision_type
+      @coll_type = @shape_struct.collision_type
+      @group = @shape_struct.group
+    end
+
+    [:e, :u, :data, :layers].each do |f| #TODO consider implementing accessor using NiceFFI means
+      define_method(f) { @shape_struct[f] }
+      define_method("#{f}=") { |new_f| @shape_struct[f] = new_f }
     end
 
     def body
@@ -92,65 +111,36 @@ module CP
     end
 
     def collision_type
-      @collType
+      @coll_type
     end
     def collision_type=(coll_type)
-      @collType = coll_type
+      @coll_type = coll_type
       @shape_struct.collision_type = coll_type.object_id
     end
 
     def group
-      @shape_struct.group
+      @group
     end
     def group=(group_obj)
+      @group = group_obj
       @shape_struct.group = group_obj.object_id
     end
 
-    def layers
-      @shape_struct.layers
-    end
-    def layers=(l)
-      @shape_struct.layers = l
-    end
-
     def bb
-      our_bb = @struct.shape.bb
-      size = BBStruct.size
-      bb_ptr = FFI::MemoryPointer.new size
-      bb_ptr.send(:put_bytes, 0, our_bb.to_bytes, 0, size)
-      BB.new(BBStruct.new(bb_ptr))
+      bb_ptr = FFI::MemoryPointer.new BBStruct.size
+      bb_ptr.put_bytes 0, @shape_struct.bb.to_bytes, 0, BBStruct.size
+      BB.new BBStruct.new bb_ptr
     end
 
     def cache_bb
       CP::BB.new CP.cpShapeCacheBB(@struct)  #TODO
     end
 
-    def e
-      @shape_struct.e
-    end
-    def e=(new_e)
-      @shape_struct.e = new_e
-    end
-
-    def u
-      @shape_struct.u
-    end
-    def u=(new_u)
-      @shape_struct.u = new_u
-    end
-
-    def data
-      @shape_struct.data
-    end
-    def data=(new_data)
-      @shape_struct.data = new_data
-    end
-
     def surface_v
       Vec2.new @shape_struct.surface_v
     end 
     def surface_v=(new_sv)
-      @shape_struct.surface_v.pointer.put_bytes 0, new_sv.struct.to_bytes, 0,Vect.size
+      @shape_struct.surface_v.pointer.put_bytes 0, new_sv.struct.to_bytes, 0, Vect.size
     end
 
     def sensor?
@@ -193,53 +183,37 @@ module CP
         SegmentQueryInfo.new hit
       end
     end
-   
+
     class Circle
       include Shape
+
       def initialize(body, rad, offset_vec)
-        @body = body
         ptr = CP.cpCircleShapeNew body.struct.pointer, rad, offset_vec.struct
-        super(CircleShapeStruct.new ptr)
+        super body, CircleShapeStruct.new(ptr)
         set_data_pointer
       end
 
-    def data
-      @shape_struct.data
-    end
-    def data=(new_data)
-      @shape_struct.data = new_data
+      def radius
+        @shape_struct.r
+      end
     end
 
-    def set_data_pointer #TODO remove duplicate code
-      mem = FFI::MemoryPointer.new(:long)
-      mem.put_long 0, object_id
-      # this is needed to prevent data corruption by GC
-      @shape_pointer = mem
-      @shape_struct.data = mem
-    end
-
-    def radius
-		  @shape_struct.r
-    end
-  end
     class Segment
       include Shape
       def initialize(body, v1, v2, r)
-        @body = body
         ptr = CP.cpSegmentShapeNew body.struct.pointer, v1.struct, v2.struct, r
-        @struct = ShapeStruct.new ptr
+        super body, SegmentShapeStruct.new(ptr)
         set_data_pointer
       end
     end
+
     class Poly
       include Shape
       def initialize(body, verts, offset_vec)
-        @body = body
         verts = CP::Shape::Poly.make_vertices_valid(verts)
         mem_pointer = CP::Shape::Poly.pointer_for_verts(verts)
-        
         ptr = CP.cpPolyShapeNew body.struct.pointer, verts.size, mem_pointer, offset_vec.struct
-        @struct = ShapeStruct.new ptr
+        super body, SegmentShapeStruct.new(ptr)
         set_data_pointer
       end
       
