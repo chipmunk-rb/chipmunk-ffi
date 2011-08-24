@@ -2,12 +2,12 @@ require 'chipmunk-ffi'
 
 module CP
   func :cpCircleShapeSetRadius, [:pointer, CP_FLOAT], :void
-  func :cpCircleShapeSetOffset, [:pointer, Vect.by_value], :void
+  func :cpCircleShapeSetOffset, [:pointer, VECT], :void
   
-  func :cpSegmentShapeSetEndpoints, [:pointer, Vect.by_value, Vect.by_value], :void
+  func :cpSegmentShapeSetEndpoints, [:pointer, VECT, VECT], :void
   func :cpSegmentShapeSetRadius,    [:pointer, CP_FLOAT], :void
   
-  func :cpPolyShapeSetVerts, [:pointer, :int, :pointer, Vect.by_value], :void
+  func :cpPolyShapeSetVerts, [:pointer, :int, :pointer, VECT], :void
   
   module Shape
     class Circle

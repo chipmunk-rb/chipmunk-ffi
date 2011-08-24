@@ -2,11 +2,11 @@ module CP
   # FIXME tell Scott Lembcke that this function is missing from chipmunk_ffi.h
   # cp_static_inline :cpArbiterIsFirstContact, [:pointer], :int
   
-  func :cpArbiterGetNormal, [:pointer, :int], Vect.by_value
-  func :cpArbiterGetPoint, [:pointer, :int], Vect.by_value
+  func :cpArbiterGetNormal, [:pointer, :int], VECT
+  func :cpArbiterGetPoint, [:pointer, :int], VECT
   
-  func :cpArbiterTotalImpulse, [:pointer], Vect.by_value
-  func :cpArbiterTotalImpulseWithFriction, [:pointer], Vect.by_value
+  func :cpArbiterTotalImpulse, [:pointer], VECT
+  func :cpArbiterTotalImpulseWithFriction, [:pointer], VECT
   
   class ArbiterStruct < NiceFFI::Struct
     layout(
@@ -16,7 +16,7 @@ module CP
       :b, :pointer,
       :e, CP_FLOAT,
       :u, CP_FLOAT,
-      :surf_vr, Vect.by_value,
+      :surf_vr, VECT,
       :stamp, :int,
       :handler, :pointer,
       :swapped_col, :char,

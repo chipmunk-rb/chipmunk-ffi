@@ -17,7 +17,7 @@ module CP
              :bias, Vect)
   end
 
-  func :cpGrooveJointNew, [:pointer, :pointer, Vect.by_value, Vect.by_value, Vect.by_value], :pointer
+  func :cpGrooveJointNew, [:pointer, :pointer, VECT, VECT, VECT], :pointer
 
   class GrooveJoint
     include Constraint

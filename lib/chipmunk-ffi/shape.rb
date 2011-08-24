@@ -5,18 +5,17 @@ module CP
                      :poly_shape,
                      :num_shapes]
 
-  callback :cacheData, [:pointer,Vect.by_value,Vect.by_value], BBStruct.by_value
+  callback :cacheData, [:pointer, VECT, VECT], BBStruct.by_value
   callback :destroy, [:pointer], :void
-  callback :pointQuery, [:pointer,Vect.by_value], :int
-  callback :segmentQuery, [:pointer,Vect.by_value,Vect.by_value,:pointer], :void
+  callback :pointQuery, [:pointer, VECT], :int
+  callback :segmentQuery, [:pointer, VECT, VECT,:pointer], :void
 
   class ShapeClassStruct < NiceFFI::Struct
-    layout( :type, :shape_type,
+    layout :type, :shape_type,
            :cacheData, :pointer,
            :destroy, :pointer,
            :pointQuery, :pointer,
            :segmentQuery, :pointer
-          )
   end
 
   class ShapeStruct < NiceFFI::Struct
@@ -26,7 +25,7 @@ module CP
            :sensor, :int,
            :e, CP_FLOAT,
            :u, CP_FLOAT,
-           :surface_v, Vect.by_value,
+           :surface_v, VECT,
            :data, :pointer,
            :collision_type, :uint,
            :group, :uint,
@@ -34,36 +33,33 @@ module CP
            :hash_value, :size_t,
            #CP_PRIVATE values below, ergo unused.
            #Can't omit them, ShapeStruct is part of other structs
-    	     :space, :pointer,
+           :space, :pointer,
            :next, :pointer,
            :prev, :pointer,
            :hash_value, :uint
   end
 
   class SegmentQueryInfoStruct < NiceFFI::Struct
-    layout(:shape, :pointer,
+    layout :shape, :pointer,
            :t, CP_FLOAT,
-           :n, Vect.by_value
-          )
+           :n, VECT
   end
 
   class CircleShapeStruct < NiceFFI::Struct
-    layout(
-        :shape, ShapeStruct.by_value,
-        :c, Vect.by_value,
-        :tc, Vect.by_value,
-	      :r, CP_FLOAT
-    )
+    layout :shape, ShapeStruct.by_value,
+           :c, VECT,
+           :tc, VECT,
+           :r, CP_FLOAT
   end
 
-  func :cpCircleShapeNew, [BodyStruct,CP_FLOAT,Vect.by_value], ShapeStruct
+  func :cpCircleShapeNew, [BodyStruct,CP_FLOAT, VECT], ShapeStruct
 	func :cpCircleShapeGetRadius, [ShapeStruct], CP_FLOAT
-  func :cpSegmentShapeNew, [BodyStruct,Vect.by_value,Vect.by_value,CP_FLOAT], ShapeStruct
-  func :cpPolyShapeNew, [BodyStruct,:int,:pointer,Vect.by_value], ShapeStruct
+  func :cpSegmentShapeNew, [BodyStruct, VECT, VECT,CP_FLOAT], ShapeStruct
+  func :cpPolyShapeNew, [BodyStruct,:int,:pointer, VECT], ShapeStruct
   func :cpShapeCacheBB, [ShapeStruct], BBStruct.by_value
   func :cpResetShapeIdCounter, [], :void
-  func :cpShapePointQuery, [:pointer, Vect.by_value], :int
-	func :cpShapeSegmentQuery, [:pointer, Vect.by_value, Vect.by_value, :pointer], :int
+  func :cpShapePointQuery, [:pointer, VECT], :int
+	func :cpShapeSegmentQuery, [:pointer, VECT, VECT, :pointer], :int
   func :cpPolyValidate, [:pointer, :int], :int
 
   module Shape

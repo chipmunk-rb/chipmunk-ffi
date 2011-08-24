@@ -8,7 +8,7 @@ module CP
   callback :cpCollisionPostSolveFunc, [:pointer,:pointer,:pointer], :int
   callback :cpCollisionSeparateFunc, [:pointer,:pointer,:pointer], :int
 	callback :cpSpacePointQueryFunc, [:pointer,:pointer], :void
-	callback :cpSpaceSegmentQueryFunc, [:pointer, :float, Vect.by_value, :pointer], :void
+	callback :cpSpaceSegmentQueryFunc, [:pointer, :float, VECT, :pointer], :void
 	callback :cpSpaceBBQueryFunc, [:pointer,:pointer], :void
 
   class CollisionHandlerStruct < NiceFFI::Struct
@@ -26,7 +26,7 @@ module CP
   class SpaceStruct < NiceFFI::Struct
     layout( :iterations, :int,
       :elastic_iterations, :int,
-      :gravity, Vect.by_value,
+      :gravity, VECT,
       :damping, CP_FLOAT,
       :locked, :int,
       :stamp, :int,
@@ -72,11 +72,11 @@ module CP
    :cpCollisionBeginFunc, :cpCollisionPreSolveFunc, :cpCollisionPostSolveFunc, :cpCollisionSeparateFunc, :pointer], :void
   func :cpSpaceRemoveCollisionHandler, [:pointer, :uint, :uint], :void
 
-  func :cpSpacePointQuery, [:pointer, Vect.by_value, :uint, :uint, :cpSpacePointQueryFunc, :pointer], :pointer
-  func :cpSpacePointQueryFirst, [:pointer, Vect.by_value, :uint, :uint], :pointer
+  func :cpSpacePointQuery, [:pointer, VECT, :uint, :uint, :cpSpacePointQueryFunc, :pointer], :pointer
+  func :cpSpacePointQueryFirst, [:pointer, VECT, :uint, :uint], :pointer
 
-  func :cpSpaceSegmentQuery, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :cpSpaceSegmentQueryFunc, :pointer], :int
-  func :cpSpaceSegmentQueryFirst, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :pointer], :pointer
+  func :cpSpaceSegmentQuery, [:pointer, VECT, VECT, :uint, :uint, :cpSpaceSegmentQueryFunc, :pointer], :int
+  func :cpSpaceSegmentQueryFirst, [:pointer, VECT, VECT, :uint, :uint, :pointer], :pointer
   
   func :cpSpaceBBQuery, [:pointer, :pointer, :uint, :uint, :cpSpaceBBQueryFunc, :pointer], :void
 

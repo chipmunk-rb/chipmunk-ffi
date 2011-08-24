@@ -15,7 +15,7 @@ module CP
              :bias, CP_FLOAT)
   end
 
-  func :cpSlideJointNew, [:pointer, :pointer, Vect.by_value, Vect.by_value, CP_FLOAT, CP_FLOAT], :pointer
+  func :cpSlideJointNew, [:pointer, :pointer, VECT, VECT, CP_FLOAT, CP_FLOAT], :pointer
 
   class SlideJoint
     include Constraint

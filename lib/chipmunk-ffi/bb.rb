@@ -8,7 +8,7 @@ module CP
   end
 
   bb = BBStruct.by_value
-  vect = Vect.by_value
+  vect = VECT
 
   cp_static_inline :cpBBNew, [CP_FLOAT]*4, bb
   cp_static_inline :cpBBIntersects, [bb, bb], :int

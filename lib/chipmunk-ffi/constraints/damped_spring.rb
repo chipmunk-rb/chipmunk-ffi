@@ -18,7 +18,7 @@ module CP
              :n, Vect)
   end
 
-  func :cpDampedSpringNew, [:pointer, :pointer, Vect.by_value, Vect.by_value, CP_FLOAT, CP_FLOAT, CP_FLOAT], :pointer
+  func :cpDampedSpringNew, [:pointer, :pointer, VECT, VECT, CP_FLOAT, CP_FLOAT, CP_FLOAT], :pointer
 
   class DampedSpring
     include Constraint

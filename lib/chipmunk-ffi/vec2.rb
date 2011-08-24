@@ -1,18 +1,18 @@
 module CP
   class Vect < FFI::Struct
-    layout( :x, CP_FLOAT,
-            :y, CP_FLOAT )
+    layout(:x, CP_FLOAT,
+           :y, CP_FLOAT)
 
-    def self.release( ptr )
+    def self.release(ptr)
       free ptr
     end
 
-    def initialize( ptr )
+    def initialize(ptr)
       case ptr
-      when FFI::MemoryPointer, FFI::Buffer, FFI::AutoPointer
-        super ptr
-      else
-        super FFI::AutoPointer.new(ptr, self.class.method(:release))
+        when FFI::MemoryPointer, FFI::Buffer, FFI::AutoPointer
+          super ptr
+        else
+          super FFI::AutoPointer.new(ptr, self.class.method(:release))
       end
     end
 
@@ -21,40 +21,42 @@ module CP
     end
   end
 
-  cp_static_inline :cpv, [CP_FLOAT,CP_FLOAT], Vect.by_value
-  cp_static_inline :cpvneg, [Vect.by_value], Vect.by_value
-  cp_static_inline :cpvadd, [Vect.by_value,Vect.by_value], Vect.by_value
-  cp_static_inline :cpvsub, [Vect.by_value,Vect.by_value], Vect.by_value
-  cp_static_inline :cpvmult, [Vect.by_value,CP_FLOAT], Vect.by_value
-  cp_static_inline :cpvdot, [Vect.by_value,Vect.by_value], CP_FLOAT
-  cp_static_inline :cpvcross, [Vect.by_value,Vect.by_value], CP_FLOAT
+  VECT = Vect.by_value #most used in signatures definition, never a
 
-  cp_static_inline :cpvperp, [Vect.by_value], Vect.by_value
-  cp_static_inline :cpvrperp, [Vect.by_value], Vect.by_value
-  cp_static_inline :cpvproject, [Vect.by_value,Vect.by_value], Vect.by_value
-  cp_static_inline :cpvrotate, [Vect.by_value,Vect.by_value], Vect.by_value
-  cp_static_inline :cpvunrotate, [Vect.by_value,Vect.by_value], Vect.by_value
+  cp_static_inline :cpv, [CP_FLOAT]*2, VECT
+  cp_static_inline :cpvneg, [VECT], VECT
+  cp_static_inline :cpvadd, [VECT]*2, VECT
+  cp_static_inline :cpvsub, [VECT]*2, VECT
+  cp_static_inline :cpvmult, [VECT, CP_FLOAT], VECT
+  cp_static_inline :cpvdot, [VECT]*2, CP_FLOAT
+  cp_static_inline :cpvcross, [VECT]*2, CP_FLOAT
 
-  cp_static_inline :cpvlengthsq, [Vect.by_value], CP_FLOAT
+  cp_static_inline :cpvperp, [VECT], VECT
+  cp_static_inline :cpvrperp, [VECT], VECT
+  cp_static_inline :cpvproject, [VECT]*2, VECT
+  cp_static_inline :cpvrotate, [VECT]*2, VECT
+  cp_static_inline :cpvunrotate, [VECT]*2, VECT
 
-  cp_static_inline :cpvlerp, [Vect.by_value,Vect.by_value,CP_FLOAT], Vect.by_value
+  cp_static_inline :cpvlengthsq, [VECT], CP_FLOAT
 
-  cp_static_inline :cpvnormalize, [Vect.by_value], Vect.by_value
-  cp_static_inline :cpvnormalize_safe, [Vect.by_value], Vect.by_value
+  cp_static_inline :cpvlerp, [VECT, VECT, CP_FLOAT], VECT
 
-  cp_static_inline :cpvclamp, [Vect.by_value,Vect.by_value], Vect.by_value
-  cp_static_inline :cpvlerpconst, [Vect.by_value,Vect.by_value, CP_FLOAT], Vect.by_value
-  cp_static_inline :cpvdist, [Vect.by_value,Vect.by_value], CP_FLOAT
-  cp_static_inline :cpvdistsq, [Vect.by_value,Vect.by_value], CP_FLOAT
+  cp_static_inline :cpvnormalize, [VECT], VECT
+  cp_static_inline :cpvnormalize_safe, [VECT], VECT
 
-  cp_static_inline :cpvnear, [Vect.by_value,Vect.by_value, CP_FLOAT], :int
+  cp_static_inline :cpvclamp, [VECT]*2, VECT
+  cp_static_inline :cpvlerpconst, [VECT, VECT, CP_FLOAT], VECT
+  cp_static_inline :cpvdist, [VECT]*2, CP_FLOAT
+  cp_static_inline :cpvdistsq, [VECT]*2, CP_FLOAT
 
-  func :cpvlength, [Vect.by_value], CP_FLOAT
-  func :cpvforangle, [CP_FLOAT], Vect.by_value
-  func :cpvslerp, [Vect.by_value, Vect.by_value, CP_FLOAT], Vect.by_value
-  func :cpvslerpconst, [Vect.by_value, Vect.by_value, CP_FLOAT], Vect.by_value
-  func :cpvtoangle, [Vect.by_value], CP_FLOAT
-  func :cpvstr, [Vect.by_value], :string
+  cp_static_inline :cpvnear, [VECT, VECT, CP_FLOAT], :int
+
+  func :cpvlength, [VECT], CP_FLOAT
+  func :cpvforangle, [CP_FLOAT], VECT
+  func :cpvslerp, [VECT, VECT, CP_FLOAT], VECT
+  func :cpvslerpconst, [VECT, VECT, CP_FLOAT], VECT
+  func :cpvtoangle, [VECT], CP_FLOAT
+  func :cpvstr, [VECT], :string
 
   class Vec2
     attr_accessor :struct
