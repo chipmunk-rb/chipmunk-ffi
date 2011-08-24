@@ -27,10 +27,11 @@ module CP
       #:shape_list, ShapeStruct #TODO check
     )
 
-    def self.release(me)
-      # TODO is this right?
-      CP.cpBodyFree me
-    end
+    #def self.release(me)
+    #  # TODO Q: is this right? A: seems right, but not required, no memory leaks without it
+    #  #puts "body struct release #{me}"
+    #  CP.cpBodyFree me
+    #end
   end
   func :cpBodyNew, [CP_FLOAT, CP_FLOAT], BodyStruct
   func :cpBodyDestroy, [BodyStruct], :void
@@ -51,6 +52,8 @@ module CP
   func :cpBodySetMoment, [:pointer, CP_FLOAT], :void
   func :cpBodySetAngle, [:pointer, CP_FLOAT], :void
 
+  #func :cpBodyFree, [:pointer], :void
+
   class Body
     attr_reader :struct
     def initialize(*args)
@@ -66,6 +69,7 @@ module CP
       end
       set_default_velocity_lambda
       set_default_position_lambda
+      ObjectSpace.define_finalizer(self,proc{|id| puts "body finalizer #{id}"})
     end
 
     def m
