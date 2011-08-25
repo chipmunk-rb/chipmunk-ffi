@@ -60,7 +60,7 @@ module CP
   func :cpSpaceRemoveBody, [:pointer, :pointer], :void
   func :cpSpaceRemoveConstraint, [:pointer, :pointer], :void
 
-  #func :cpSpaceRehashStatic, [:pointer], :void  #TODO
+  #func :cpSpaceRehashStatic, [:pointer], :void  #TODO move to space_hash.rb
   func :cpSpaceStep, [:pointer,:double], :void
   #func :cpSpaceResizeActiveHash, [:pointer,CP_FLOAT,:int], :void #TODO
   #func :cpSpaceResizeStaticHash, [:pointer,CP_FLOAT,:int], :void #TODO
@@ -80,9 +80,7 @@ module CP
   
   func :cpSpaceBBQuery, [:pointer, :pointer, :uint, :uint, :cpSpaceBBQueryFunc, :pointer], :void
 
-
-
-  class Space 
+  class Space
     attr_reader :struct
     def initialize
       @struct = SpaceStruct.new(CP.cpSpaceNew)
@@ -216,13 +214,13 @@ module CP
 
     def add_collision_func(a,b,type=:pre,&block)
       arity = block.arity
-      callback = Proc.new do |arb_ptr,space_ptr,data_ptr|
+      callback = Proc.new do |arb_ptr, _, _|
         arbiter = Arbiter.new(arb_ptr)
         ret = case arity
         when 1 then block.call(arbiter)
         when 2 then block.call(*arbiter.shapes)
         when 3 then block.call(arbiter,*arbiter.shapes)
-        else raise ArgumentError
+        else raise ArgumentError, 'expected block arity 1..3'
         end
         ret ? 1 : 0
       end
@@ -291,17 +289,17 @@ module CP
       con
     end
 
-    def resize_static_hash(dim, count)
-      CP.cpSpaceResizeStaticHash @struct.pointer, dim, count
-    end
-
-    def resize_active_hash(dim, count)
-      CP.cpSpaceResizeActiveHash @struct.pointer, dim, count
-    end
-
-    def rehash_static
-      CP.cpSpaceRehashStatic @struct.pointer
-    end
+    #def resize_static_hash(dim, count) #TODO move to some index-specific class
+    #  CP.cpSpaceResizeStaticHash @struct.pointer, dim, count
+    #end
+    #
+    #def resize_active_hash(dim, count)
+    #  CP.cpSpaceResizeActiveHash @struct.pointer, dim, count
+    #end
+    #
+    #def rehash_static
+    #  CP.cpSpaceRehashStatic @struct.pointer
+    #end
 
     def step(dt)
       CP.cpSpaceStep @struct.pointer, dt
