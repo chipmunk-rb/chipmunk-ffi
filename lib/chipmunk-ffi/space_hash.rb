@@ -11,7 +11,7 @@ module CP
   end
 
   class SpaceHashStruct < NiceFFI::Struct
-    layout(:spatial_index, CP::SpatialIndexStruct.by_value,
+    layout(:spatial_index, CP::SpatialIndexStruct,
            :num_cells, :int,
            :cell_dim, CP_FLOAT,
            :table, :pointer,
@@ -19,7 +19,7 @@ module CP
            :pooled_bins, :pointer,
            :pooled_handles, :pointer,
            :allocated_buffers, :pointer,
-           :stamp, :int)
+           :stamp, :uint) #TODO introduce constant for timestamp type
   end
   func :cpSpaceHashNew,  [CP_FLOAT,:int,:cpSpatialIndexQueryFunc,:pointer], :pointer
   #the next 3 fuctions were removed from API
