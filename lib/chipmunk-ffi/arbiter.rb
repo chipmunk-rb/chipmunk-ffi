@@ -1,29 +1,74 @@
 module CP
-  # FIXME tell Scott Lembcke that this function is missing from chipmunk_ffi.h
-  # cp_static_inline :cpArbiterIsFirstContact, [:pointer], :int
-  
-  func :cpArbiterGetNormal, [:pointer, :int], VECT
-  func :cpArbiterGetPoint, [:pointer, :int], VECT
-  
+  callback :cpCollisionBeginFunc, [:pointer]*3, :int
+  callback :cpCollisionPreSolveFunc, [:pointer]*3, :int
+  callback :cpCollisionPostSolveFunc, [:pointer]*3, :void
+  callback :cpCollisionSeparateFunc, [:pointer]*3, :void
+
+  class CollisionHandlerStruct < NiceFFI::Struct
+    layout :a, :uint,
+           :b, :uint,
+           :begin_func, :cpCollisionBeginFunc,
+           :pre_solve, :cpCollisionPreSolveFunc,
+           :postSolve, :cpCollisionPostSolveFunc,
+           :separate, :cpCollisionSeparateFunc,
+           :data, :pointer
+  end
+
+  enum :arbiter_state, [:first_collision,
+                        :normal,
+                        :ignore,
+                        :cached]
+
+  class ArbiterThread < NiceFFI::Struct
+    layout :next_arbiter, :pointer,
+           :prev_arbiter, :pointer
+  end
+
+  class ArbiterStruct < NiceFFI::Struct
+    layout :e, CP_FLOAT,
+           :u, CP_FLOAT,
+           :surface_vr, VECT,
+           #only private fields below
+           :a, :pointer,
+           :b, :pointer,
+           :body_a, :pointer,
+           :body_b, :pointer,
+           :thread_a, ArbiterThread,
+           :thread_b, ArbiterThread,
+           :num_contacts, :int,
+           :contacts, :pointer,
+           :stamp, :uint,
+           :handler, :pointer,
+           :swapped_col, :int,
+           :state, :arbiter_state
+  end
+
   func :cpArbiterTotalImpulse, [:pointer], VECT
   func :cpArbiterTotalImpulseWithFriction, [:pointer], VECT
-  
-  class ArbiterStruct < NiceFFI::Struct
-    layout(
-      :num_contacts, :int,
-      :contacts, :pointer,
-      :a, :pointer,
-      :b, :pointer,
-      :e, CP_FLOAT,
-      :u, CP_FLOAT,
-      :surf_vr, VECT,
-      :stamp, :int,
-      :handler, :pointer,
-      :swapped_col, :char,
-      :first_col, :char
-    )
+  func :cpArbiterIgnore, [:pointer], :void
+
+  cp_static_inline :cpArbiterGetShapes, [:pointer]*3, :void
+  cp_static_inline :cpArbiterGetBodies, [:pointer]*3, :void
+  cp_static_inline :cpArbiterIsFirstContact, [:pointer], :int
+  cp_static_inline :cpArbiterGetCount, [:pointer], :int
+
+  class ContactPointSet < NiceFFI::Struct
+    class ContactPoint < NiceFFI::Struct
+      layout :point, VECT,
+             :normal, VECT,
+             :dist, CP_FLOAT
+    end
+    layout :count, :int,
+           :points, [ContactPoint, 4]
+    #TODO consider constants for types and numbers like CP_MAX_CONTACTS_PER_ARBITER = 4
+    #that would be mostly copying chipmunk_types.h
   end
-  
+
+  func :cpArbiterGetContactPointSet, [:pointer], ContactPointSet.by_value
+  func :cpArbiterGetNormal, [:pointer, :int], VECT
+  func :cpArbiterGetPoint, [:pointer, :int], VECT
+  func :cpArbiterGetDepth, [:pointer, :int], CP_FLOAT
+
   class Arbiter
     attr_reader :struct
     def initialize(ptr)
@@ -31,12 +76,11 @@ module CP
       @shapes = nil
       
       # Temporary workaround for a bug in chipmunk, fixed in r342.
-      @struct.num_contacts = 0 if @struct.contacts.null?
+      @struct.num_contacts = 0 if @struct.contacts.null? #TODO check if still needed
     end
     
     def first_contact?
-      # CP.cpArbiterIsFirstContact(@struct.pointer).nonzero?
-      @struct.first_col.nonzero?
+      @struct.state == :first_collision
     end
     
     def point(index = 0)
