@@ -8,7 +8,7 @@ module CP
   callback :cpCollisionPostSolveFunc, [:pointer,:pointer,:pointer], :int
   callback :cpCollisionSeparateFunc, [:pointer,:pointer,:pointer], :int
 	callback :cpSpacePointQueryFunc, [:pointer,:pointer], :void
-	callback :cpSpaceSegmentQueryFunc, [:pointer, :float, Vect.by_value, :pointer], :void
+	callback :cpSpaceSegmentQueryFunc, [:pointer, :float, VECT, :pointer], :void
 	callback :cpSpaceBBQueryFunc, [:pointer,:pointer], :void
 
   class CollisionHandlerStruct < NiceFFI::Struct
@@ -26,7 +26,7 @@ module CP
   class SpaceStruct < NiceFFI::Struct
     layout( :iterations, :int,
       :elastic_iterations, :int,
-      :gravity, Vect.by_value,
+      :gravity, VECT,
       :damping, CP_FLOAT,
       :locked, :int,
       :stamp, :int,
@@ -60,7 +60,7 @@ module CP
   func :cpSpaceRemoveBody, [:pointer, :pointer], :void
   func :cpSpaceRemoveConstraint, [:pointer, :pointer], :void
 
-  #func :cpSpaceRehashStatic, [:pointer], :void  #TODO
+  #func :cpSpaceRehashStatic, [:pointer], :void  #TODO move to space_hash.rb
   func :cpSpaceStep, [:pointer,:double], :void
   #func :cpSpaceResizeActiveHash, [:pointer,CP_FLOAT,:int], :void #TODO
   #func :cpSpaceResizeStaticHash, [:pointer,CP_FLOAT,:int], :void #TODO
@@ -72,17 +72,15 @@ module CP
    :cpCollisionBeginFunc, :cpCollisionPreSolveFunc, :cpCollisionPostSolveFunc, :cpCollisionSeparateFunc, :pointer], :void
   func :cpSpaceRemoveCollisionHandler, [:pointer, :uint, :uint], :void
 
-  func :cpSpacePointQuery, [:pointer, Vect.by_value, :uint, :uint, :cpSpacePointQueryFunc, :pointer], :pointer
-  func :cpSpacePointQueryFirst, [:pointer, Vect.by_value, :uint, :uint], :pointer
+  func :cpSpacePointQuery, [:pointer, VECT, :uint, :uint, :cpSpacePointQueryFunc, :pointer], :pointer
+  func :cpSpacePointQueryFirst, [:pointer, VECT, :uint, :uint], :pointer
 
-  func :cpSpaceSegmentQuery, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :cpSpaceSegmentQueryFunc, :pointer], :int
-  func :cpSpaceSegmentQueryFirst, [:pointer, Vect.by_value, Vect.by_value, :uint, :uint, :pointer], :pointer
+  func :cpSpaceSegmentQuery, [:pointer, VECT, VECT, :uint, :uint, :cpSpaceSegmentQueryFunc, :pointer], :int
+  func :cpSpaceSegmentQueryFirst, [:pointer, VECT, VECT, :uint, :uint, :pointer], :pointer
   
   func :cpSpaceBBQuery, [:pointer, :pointer, :uint, :uint, :cpSpaceBBQueryFunc, :pointer], :void
 
-
-
-  class Space 
+  class Space
     attr_reader :struct
     def initialize
       @struct = SpaceStruct.new(CP.cpSpaceNew)
@@ -216,13 +214,13 @@ module CP
 
     def add_collision_func(a,b,type=:pre,&block)
       arity = block.arity
-      callback = Proc.new do |arb_ptr,space_ptr,data_ptr|
+      callback = Proc.new do |arb_ptr, _, _|
         arbiter = Arbiter.new(arb_ptr)
         ret = case arity
         when 1 then block.call(arbiter)
         when 2 then block.call(*arbiter.shapes)
         when 3 then block.call(arbiter,*arbiter.shapes)
-        else raise ArgumentError
+        else raise ArgumentError, 'expected block arity 1..3'
         end
         ret ? 1 : 0
       end
@@ -291,17 +289,17 @@ module CP
       con
     end
 
-    def resize_static_hash(dim, count)
-      CP.cpSpaceResizeStaticHash @struct.pointer, dim, count
-    end
-
-    def resize_active_hash(dim, count)
-      CP.cpSpaceResizeActiveHash @struct.pointer, dim, count
-    end
-
-    def rehash_static
-      CP.cpSpaceRehashStatic @struct.pointer
-    end
+    #def resize_static_hash(dim, count) #TODO move to some index-specific class
+    #  CP.cpSpaceResizeStaticHash @struct.pointer, dim, count
+    #end
+    #
+    #def resize_active_hash(dim, count)
+    #  CP.cpSpaceResizeActiveHash @struct.pointer, dim, count
+    #end
+    #
+    #def rehash_static
+    #  CP.cpSpaceRehashStatic @struct.pointer
+    #end
 
     def step(dt)
       CP.cpSpaceStep @struct.pointer, dt

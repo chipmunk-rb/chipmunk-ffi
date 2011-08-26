@@ -12,8 +12,8 @@ module CP
              :j_max, CP_FLOAT,
              :bias, CP_FLOAT)
   end
-  func :cpPivotJointNew, [:pointer, :pointer, Vect.by_value], :pointer
-  func :cpPivotJointNew2, [:pointer, :pointer, Vect.by_value, Vect.by_value], :pointer
+  func :cpPivotJointNew, [:pointer, :pointer, VECT], :pointer
+  func :cpPivotJointNew2, [:pointer, :pointer, VECT, VECT], :pointer
 
   class PivotJoint
     include Constraint

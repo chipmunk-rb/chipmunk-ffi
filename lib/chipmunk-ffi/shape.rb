@@ -1,57 +1,77 @@
 module CP
 
-  ShapeType = enum(
-    :circle_shape,
-    :segment_shape,
-    :poly_shape,
-    :num_shapes
-  )
+  enum :shape_type, [:circle_shape,
+                     :segment_shape,
+                     :poly_shape,
+                     :num_shapes]
 
-  callback :cacheData, [:pointer,Vect.by_value,Vect.by_value], BBStruct.by_value
+  callback :cacheData, [:pointer, VECT, VECT], BBStruct.by_value
   callback :destroy, [:pointer], :void
-  callback :pointQuery, [:pointer,Vect.by_value], :int
-  callback :segmentQuery, [:pointer,Vect.by_value,Vect.by_value,:pointer], :void
+  callback :pointQuery, [:pointer, VECT], :int
+  callback :segmentQuery, [:pointer, VECT, VECT,:pointer], :void
 
   class ShapeClassStruct < NiceFFI::Struct
-    layout( :type, ShapeType,
+    layout :type, :shape_type,
            :cacheData, :pointer,
            :destroy, :pointer,
            :pointQuery, :pointer,
            :segmentQuery, :pointer
-          )
   end
 
   class ShapeStruct < NiceFFI::Struct
-    layout( :klass, :pointer,
+    layout :klass, :pointer,
            :body, :pointer,
-           :bb, BBStruct.by_value,
+           :bb, BBStruct,
            :sensor, :int,
            :e, CP_FLOAT,
            :u, CP_FLOAT,
-           :surface_v, Vect.by_value,
+           :surface_v, VECT,
            :data, :pointer,
            :collision_type, :uint,
            :group, :uint,
            :layers, :uint,
-           :hash_value, :size_t
-          )
+           :hash_value, :size_t,
+           #CP_PRIVATE values below, ergo unused.
+           #Can't omit them, ShapeStruct is part of other structs
+           :space, :pointer,
+           :next, :pointer,
+           :prev, :pointer,
+           :hash_value, :uint
   end
+
   class SegmentQueryInfoStruct < NiceFFI::Struct
-    layout(:shape, :pointer,
+    layout :shape, :pointer,
            :t, CP_FLOAT,
-           :n, Vect
-          )
+           :n, VECT
+  end
+
+  class CircleShapeStruct < NiceFFI::Struct
+    layout :shape, ShapeStruct,
+           :c, VECT,
+           :tc, VECT,
+           :r, CP_FLOAT
+  end
+
+  class SegmentShapeStruct < NiceFFI::Struct
+    layout :shape, ShapeStruct,
+           :a, VECT,
+           :b, VECT,
+           :n, VECT,
+           :ta, VECT,
+           :tb, VECT,
+           :tn, VECT,
+           :r, CP_FLOAT
   end
 
 
-  func :cpCircleShapeNew, [BodyStruct,CP_FLOAT,Vect.by_value], ShapeStruct
+  func :cpCircleShapeNew, [BodyStruct,CP_FLOAT, VECT], ShapeStruct
 	func :cpCircleShapeGetRadius, [ShapeStruct], CP_FLOAT
-  func :cpSegmentShapeNew, [BodyStruct,Vect.by_value,Vect.by_value,CP_FLOAT], ShapeStruct
-  func :cpPolyShapeNew, [BodyStruct,:int,:pointer,Vect.by_value], ShapeStruct
-  func :cpShapeCacheBB, [ShapeStruct], :void
+  func :cpSegmentShapeNew, [BodyStruct, VECT, VECT,CP_FLOAT], ShapeStruct
+  func :cpPolyShapeNew, [BodyStruct,:int,:pointer, VECT], ShapeStruct
+  func :cpShapeCacheBB, [ShapeStruct], BBStruct.by_value
   func :cpResetShapeIdCounter, [], :void
-  func :cpShapePointQuery, [:pointer, Vect.by_value], :int
-	func :cpShapeSegmentQuery, [:pointer, Vect.by_value, Vect.by_value, :pointer], :int
+  func :cpShapePointQuery, [:pointer, VECT], :int
+	func :cpShapeSegmentQuery, [:pointer, VECT, VECT, :pointer], :int
   func :cpPolyValidate, [:pointer, :int], :int
 
   module Shape
@@ -68,20 +88,34 @@ module CP
 
     attr_reader :struct
 
+    def initialize(body, struct)
+      super()
+      @body = body
+      @struct = struct
+      @shape_struct = struct.shape
+      @coll_type = @shape_struct.collision_type
+      @group = @shape_struct.group
+    end
+
+    [:e, :u, :data, :layers].each do |f| #TODO consider implementing accessor using NiceFFI means
+      define_method(f) { @shape_struct[f] }
+      define_method("#{f}=") { |new_f| @shape_struct[f] = new_f }
+    end
+
     def body
       @body
     end
     def body=(new_body)
-      @struct.body = new_body.struct.pointer
       @body = new_body
+      @shape_struct.body = new_body.struct.pointer
     end
 
     def collision_type
-      @collType
+      @coll_type
     end
-    def collision_type=(col_type)
-      @collType = col_type
-      @struct.collision_type = col_type.object_id
+    def collision_type=(coll_type)
+      @coll_type = coll_type
+      @shape_struct.collision_type = coll_type.object_id
     end
 
     def group
@@ -89,65 +123,35 @@ module CP
     end
     def group=(group_obj)
       @group = group_obj
-      @struct.group = group_obj.object_id
-    end
-
-    def layers
-      @struct.layers
-    end
-    def layers=(l)
-      @struct.layers = l
+      @shape_struct.group = group_obj.object_id
     end
 
     def bb
-      our_bb = @struct.bb
-      size = BBStruct.size
-      bb_ptr = FFI::MemoryPointer.new size
-      bb_ptr.send(:put_bytes, 0, our_bb.to_bytes, 0, size)
-      BB.new(BBStruct.new(bb_ptr))
+      bb_ptr = FFI::MemoryPointer.new BBStruct.size
+      bb_ptr.put_bytes 0, @shape_struct.bb.to_bytes, 0, BBStruct.size
+      BB.new BBStruct.new bb_ptr
     end
 
     def cache_bb
-      CP.cpShapeCacheBB(@struct.bb) 
-      bb
-    end
-    def e
-      @struct.e
-    end
-    def e=(new_e)
-      @struct.e = new_e
-    end
-
-    def u
-      @struct.u
-    end
-    def u=(new_u)
-      @struct.u = new_u
-    end
-
-    def data
-      @struct.data
-    end
-    def data=(new_data)
-      @struct.data = new_data
+      CP::BB.new CP.cpShapeCacheBB(@struct)  #TODO
     end
 
     def surface_v
-      Vec2.new @struct.surface_v
+      Vec2.new @shape_struct.surface_v
     end 
     def surface_v=(new_sv)
-      @struct.surface_v.pointer.put_bytes 0, new_sv.struct.to_bytes, 0,Vect.size
+      @shape_struct.surface_v.pointer.put_bytes 0, new_sv.struct.to_bytes, 0, Vect.size
     end
 
     def sensor?
-      @struct.sensor == 0 ? false : true
+      @shape_struct.sensor != 0
     end
     def sensor=(new_sensor)
-      @struct.sensor = new_sensor ? 1 : 0
+      @shape_struct.sensor = new_sensor ? 1 : 0
     end
 
     def point_query(point)
-      bool_int = CP.cpShapePointQuery(@struct.pointer, point.struct)
+      bool_int = CP.cpShapePointQuery(@shape_struct.pointer, point.struct)
       bool_int == 0 ? false : true
     end
 
@@ -156,7 +160,7 @@ module CP
       mem.put_long 0, object_id
       # this is needed to prevent data corruption by GC
       @shape_pointer = mem
-      @struct.data = mem
+      @shape_struct.data = mem
     end
 
     def self.reset_id_counter
@@ -179,38 +183,37 @@ module CP
         SegmentQueryInfo.new hit
       end
     end
-   
+
     class Circle
       include Shape
+
       def initialize(body, rad, offset_vec)
-        @body = body
         ptr = CP.cpCircleShapeNew body.struct.pointer, rad, offset_vec.struct
-        @struct = ShapeStruct.new ptr
+        super body, CircleShapeStruct.new(ptr)
         set_data_pointer
       end
-      
+
       def radius
-		CP.cpCircleShapeGetRadius(@struct.pointer)
+        @shape_struct.r
       end
     end
+
     class Segment
       include Shape
       def initialize(body, v1, v2, r)
-        @body = body
         ptr = CP.cpSegmentShapeNew body.struct.pointer, v1.struct, v2.struct, r
-        @struct = ShapeStruct.new ptr
+        super body, SegmentShapeStruct.new(ptr)
         set_data_pointer
       end
     end
+
     class Poly
       include Shape
       def initialize(body, verts, offset_vec)
-        @body = body
         verts = CP::Shape::Poly.make_vertices_valid(verts)
         mem_pointer = CP::Shape::Poly.pointer_for_verts(verts)
-        
         ptr = CP.cpPolyShapeNew body.struct.pointer, verts.size, mem_pointer, offset_vec.struct
-        @struct = ShapeStruct.new ptr
+        super body, SegmentShapeStruct.new(ptr)
         set_data_pointer
       end
       

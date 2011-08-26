@@ -13,7 +13,7 @@ module CP
              :jn_max, CP_FLOAT,
              :bias, CP_FLOAT)
   end
-  func :cpPinJointNew, [:pointer, :pointer, Vect.by_value, Vect.by_value], :pointer
+  func :cpPinJointNew, [:pointer, :pointer, VECT, VECT], :pointer
 
   class PinJoint
     include Constraint
