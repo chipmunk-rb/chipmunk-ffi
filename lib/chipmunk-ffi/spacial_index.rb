@@ -1,13 +1,20 @@
 module CP
 
-  callback :cpSpaceHashBBFunc, [:pointer], BBStruct.by_value
-  callback :cpSpatialIndexQueryFunc, [:pointer, :pointer, :pointer], :void
+  callback :cpSpatialIndexBBFunc, [:pointer], BBStruct.by_value
+  callback :cpSpatialIndexIteratorFunc, [:pointer]*2, :void
+  callback :cpSpatialIndexQueryFunc, [:pointer]*3, :void
+  callback :cpSpatialIndexSegmentQueryFunc, [:pointer]*3, CP_FLOAT
 
+  # maybe copying these structures is of no use, cause SLembcke in his comments says
+  # that there's no point in reading spacial index structs' fields,
+  # thus, these classes only practical purpose is to prevent corruption by GC
+  # that should be achievable in more simple ways
+  #TODO discuss corruption prevention methods other than copying structs definitions
   class SpatialIndexStruct < NiceFFI::Struct
-    layout(:klass, :pointer,
-           :bb_func, :cpSpaceHashBBFunc,
+    layout :klass, :pointer,
+           :bb_func, :cpSpatialIndexBBFunc,
            :static_index, :pointer,
-           :dynamic_index, :pointer)
+           :dynamic_index, :pointer
   end
 
   class SpaceHashStruct < NiceFFI::Struct
@@ -22,12 +29,54 @@ module CP
            :stamp, :uint) #TODO introduce constant for timestamp type
   end
   func :cpSpaceHashNew,  [CP_FLOAT,:int,:cpSpatialIndexQueryFunc,:pointer], :pointer
-  #the next 3 fuctions were removed from API
-  #func :cpSpaceHashQuery, [:pointer, :pointer, BBStruct.by_value, :cpSpatialIndexQueryFunc, :pointer], :void
-  #func :cpSpaceHashInsert, [:pointer, :pointer, :uint, BBStruct.by_value], :void #TODO
-  #func :cpSpaceHashRemove, [:pointer, :pointer, :uint], :void #TODO
+  func :cpSpaceHashResize, [:pointer, CP_FLOAT, :int], :void
+
+  func :cpBBTreeNew, [:cpSpatialIndexBBFunc, :pointer], :pointer
+  func :cpBBTreeOptimize, [:pointer], :void
 
   #TODO wrap the new API from cpSpatialIndex.h
+  callback :cpSpatialIndexDestroyImpl, [:pointer], :void
+
+  callback :cpSpatialIndexCountImpl, [:pointer], :int
+  callback :cpSpatialIndexEachImpl, [:pointer, :cpSpatialIndexIteratorFunc, :pointer], :void
+
+  callback :cpSpatialIndexContainsImpl, [:pointer, :pointer, :uint], :int #cpBool
+  callback :cpSpatialIndexInsertImpl, [:pointer, :pointer, :uint], :void
+  callback :cpSpatialIndexRemoveImpl, [:pointer, :pointer, :uint], :void
+
+  callback :cpSpatialIndexReindexImpl, [:pointer], :void
+  callback :cpSpatialIndexReindexObjectImpl, [:pointer, :pointer, :uint], :void
+  callback :cpSpatialIndexReindexQueryImpl, [:pointer, :cpSpatialIndexQueryFunc, :pointer], :void
+
+  callback :cpSpatialIndexPointQueryImpl, [:pointer, VECT, :cpSpatialIndexQueryFunc, :pointer], :void
+  callback :cpSpatialIndexSegmentQueryImpl, [:pointer, :pointer, VECT, VECT, CP_FLOAT, :cpSpatialIndexSegmentQueryFunc, :pointer], :void
+  callback :cpSpatialIndexQueryImpl, [:pointer, :pointer, BBStruct, :cpSpatialIndexQueryFunc, :pointer], :void
+
+  class SpatialIndexClassStruct < NiceFFI::Struct
+    layout :destroy, :cpSpatialIndexDestroyImpl,
+           :count, :cpSpatialIndexCountImpl,
+           :each, :cpSpatialIndexEachImpl,
+
+           :contains, :cpSpatialIndexContainsImpl,
+           :insert, :cpSpatialIndexInsertImpl,
+           :remove, :cpSpatialIndexRemoveImpl,
+
+           :reindex, :cpSpatialIndexReindexImpl,
+           :reindexObject, :cpSpatialIndexReindexObjectImpl,
+           :reindexQuery, :cpSpatialIndexReindexQueryImpl,
+
+           :pointQuery, :cpSpatialIndexPointQueryImpl,
+           :segmentQuery, :cpSpatialIndexSegmentQueryImpl,
+           :query, :cpSpatialIndexQueryImpl
+  end
+
+  func :cpSpatialIndexFree, [:pointer], :void
+  func :cpSpatialIndexCollideStatic, [:pointer, :pointer, :cpSpatialIndexQueryFunc, :pointer], :void
+  cp_static_inline :cpSpatialIndexDestroy, [:pointer], :void
+  cp_static_inline :cpSpatialIndexCount, [:pointer], :int
+  #cp_static_inline :cpSpatialIndexEach, [:pointer, :cpSpatialIndexIteratorFunc, :pointer], :void #TODO ask NiceFFI maintainer?
+  cp_static_inline :cpSpatialIndexContains, [:pointer, :pointer, :uint], :int #cpBool
+  #cp_static_inline :cpSpatialIndexQuery[:pointer, :pointer, BBStruct, :cpSpatialIndexQueryFunc, :pointer], :void #TODO same here
 
   class SpaceHash
     attr_reader :struct
