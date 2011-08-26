@@ -5,6 +5,15 @@ describe 'A new Body' do
     b.i.should == 7
   end
 
+  it 'should be released' do
+    c = CP::Body.new(5, 7)
+    c.m.should == 5
+    c.i.should == 7
+    c = nil
+    GC.start
+    c.should be_nil
+  end
+
   it 'can set its mass' do
     b = CP::Body.new(5, 7)
     b.m = 900

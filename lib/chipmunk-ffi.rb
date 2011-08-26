@@ -42,7 +42,7 @@ module CP
   CP_FLOAT = :double
 
 end
-libs = %w{vec2 core bb body shape arbiter space constraint space_hash}
+libs = %w{vec2 core bb body shape arbiter space constraint spatial_index}
 $: << File.dirname(__FILE__)
 libs.each do |lib|
   require "chipmunk-ffi/#{lib}"

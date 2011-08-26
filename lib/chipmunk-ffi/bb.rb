@@ -1,20 +1,27 @@
 module CP
 
   class BBStruct < NiceFFI::Struct
-    layout( :l, CP_FLOAT,
+    layout(:l, CP_FLOAT,
            :b, CP_FLOAT,
            :r, CP_FLOAT,
            :t, CP_FLOAT )
   end
 
-  cp_static_inline :cpBBNew,  [CP_FLOAT,CP_FLOAT,CP_FLOAT,CP_FLOAT], BBStruct.by_value
-  cp_static_inline :cpBBIntersects, [BBStruct.by_value,BBStruct.by_value], :int
-  #TODO add cbBBIntersectsSegment
-  cp_static_inline :cpBBContainsBB, [BBStruct.by_value,BBStruct.by_value], :int
-  cp_static_inline :cpBBContainsVect, [BBStruct.by_value,Vect.by_value], :int
+  bb = BBStruct.by_value
+  vect = VECT
 
-  func :cpBBClampVect, [BBStruct.by_value,Vect.by_value], Vect.by_value
-  func :cpBBWrapVect, [BBStruct.by_value,Vect.by_value], Vect.by_value
+  cp_static_inline :cpBBNew, [CP_FLOAT]*4, bb
+  cp_static_inline :cpBBIntersects, [bb, bb], :int
+  cp_static_inline :cpBBContainsBB, [bb, bb], :int
+  cp_static_inline :cpBBContainsVect, [bb, vect], :int
+  cp_static_inline :cpBBMerge, [bb, bb], bb
+  cp_static_inline :cpBBExpand, [bb, vect], bb
+  cp_static_inline :cpBBArea, [bb], CP_FLOAT
+  cp_static_inline :cpBBMergedArea, [bb, bb], CP_FLOAT
+  cp_static_inline :cpBBIntersectsSegment, [bb, vect, vect], :int
+
+  func :cpBBClampVect, [bb, vect], vect
+  func :cpBBWrapVect, [bb, vect], vect
 
   class BB
     attr_reader :struct
@@ -28,29 +35,55 @@ module CP
         raise "wrong number of args for BB, got #{args.size}, but expected 4"
       end
     end
-    def l;@struct.l;end
-    def b;@struct.b;end
-    def r;@struct.r;end
-    def t;@struct.t;end
 
-    def l=(new_l);@struct.l=new_l;end
-    def b=(new_b);@struct.b=new_b;end
-    def r=(new_r);@struct.r=new_r;end
-    def t=(new_t);@struct.t=new_t;end
+    [:l, :b, :r, :t].each do |f|
+      define_method(f) { @struct[f] }
+      define_method("#{f}=") { |new_f| @struct[f] = new_f }
+    end
 
-    def intersect?(other_bb)
-      b = CP.cpBBintersects(@struct,other_bb.struct)
-      b == 0 ? false : true
+    def intersects?(other_bb)
+      b = CP.cpBBIntersects(@struct,other_bb.struct)
+      b != 0
     end
 
     def contains_bb?(other_bb)
-      b = CP.cpBBcontainsBB(@struct,other_bb.struct)
-      b == 0 ? false : true
+      b = CP.cpBBContainsBB(@struct,other_bb.struct)
+      b != 0
     end
 
-    def contains_vect?(other_bb)
-      b = CP.cpBBcontainsVect(@struct,other_bb.struct)
-      b == 0 ? false : true
+    def contains_vect?(vect)
+      b = CP.cpBBContainsVect(@struct,vect.struct)
+      b != 0
+    end
+
+    def ==(other_bb)
+      [:l, :b, :r, :t].each { |f| return false unless @struct[f] == other_bb.struct[f] }
+      true
+    end
+
+    def merge(other_bb)
+      CP::BB.new CP.cpBBMerge(@struct, other_bb.struct)
+    end
+
+    def +(other_bb)
+      CP::BB.new CP.cpBBMerge(@struct, other_bb.struct)
+    end
+
+    def expand(vect)
+      CP::BB.new CP.cpBBExpand(@struct, vect.struct)
+    end
+
+    def area
+      CP.cpBBArea @struct
+    end
+
+    def merged_area(other_bb)
+      CP.cpBBMergedArea @struct, other_bb.struct
+    end
+
+    def intersects_segment?(vect_1, vect_2)
+      b = CP.cpBBIntersectsSegment @struct, vect_1.struct, vect_2.struct
+      b != 0
     end
 
     def clamp_vect(v)

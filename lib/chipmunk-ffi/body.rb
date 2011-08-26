@@ -1,6 +1,6 @@
 module CP
 
-  callback :cpBodyVelocityFunc, [:pointer, Vect.by_value, CP_FLOAT, CP_FLOAT], :void
+  callback :cpBodyVelocityFunc, [:pointer, VECT, CP_FLOAT, CP_FLOAT], :void
   callback :cpBodyPositionFunc, [:pointer, CP_FLOAT], :void
 
   class BodyStruct < NiceFFI::Struct
@@ -27,29 +27,32 @@ module CP
       #:shape_list, ShapeStruct #TODO check
     )
 
-    def self.release(me)
-      # TODO is this right?
-      CP.cpBodyFree me
-    end
+    #def self.release(me)
+    #  # TODO Q: is this right? A: seems right, but not required, no memory leaks without it
+    #  #puts "body struct release #{me}"
+    #  CP.cpBodyFree me
+    #end
   end
   func :cpBodyNew, [CP_FLOAT, CP_FLOAT], BodyStruct
   func :cpBodyDestroy, [BodyStruct], :void
-  func :cpBodyUpdateVelocity, [BodyStruct,Vect.by_value,CP_FLOAT,CP_FLOAT], :void
+  func :cpBodyUpdateVelocity, [BodyStruct,VECT,CP_FLOAT,CP_FLOAT], :void
   func :cpBodyUpdatePosition, [BodyStruct,CP_FLOAT], :void
-  func :cpBodyApplyForce, [:pointer, Vect.by_value, Vect.by_value], :void
+  func :cpBodyApplyForce, [:pointer, VECT, VECT], :void
   func :cpBodyResetForces, [:pointer], :void
   
   cp_static_inline :cpBodyIsStatic, [BodyStruct.by_value], :int
   cp_static_inline :cpBodyIsRogue, [BodyStruct.by_value], :int
   cp_static_inline :cpBodyIsSleeping, [BodyStruct.by_value], :int
 
-  cp_static_inline :cpBodyLocal2World, [:pointer, Vect.by_value], Vect.by_value
-  cp_static_inline :cpBodyWorld2Local, [:pointer, Vect.by_value], Vect.by_value
-  func :cpBodyApplyImpulse, [:pointer, Vect.by_value, Vect.by_value], :void
+  cp_static_inline :cpBodyLocal2World, [:pointer, VECT], VECT
+  cp_static_inline :cpBodyWorld2Local, [:pointer, VECT], VECT
+  func :cpBodyApplyImpulse, [:pointer, VECT, VECT], :void
 
   func :cpBodySetMass, [:pointer, CP_FLOAT], :void
   func :cpBodySetMoment, [:pointer, CP_FLOAT], :void
   func :cpBodySetAngle, [:pointer, CP_FLOAT], :void
+
+  #func :cpBodyFree, [:pointer], :void
 
   class Body
     attr_reader :struct
@@ -66,6 +69,7 @@ module CP
       end
       set_default_velocity_lambda
       set_default_position_lambda
+      ObjectSpace.define_finalizer(self,proc{|id| puts "body finalizer #{id}"})
     end
 
     def m
