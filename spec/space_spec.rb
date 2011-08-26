@@ -4,7 +4,7 @@ describe 'Space in chipmunk, creation check'do
     CP::Space.new.should_not be_nil
   end
 end
-describe 'Shape in chipmunk' do
+describe 'Space in chipmunk' do
   before(:each) do
     @s = CP::Space.new
     @b = CP::Body.new 90, 76
