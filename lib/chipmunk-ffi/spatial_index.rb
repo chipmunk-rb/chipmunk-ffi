@@ -50,7 +50,7 @@ module CP
 
   callback :cpSpatialIndexPointQueryImpl, [:pointer, VECT, :cpSpatialIndexQueryFunc, :pointer], :void
   callback :cpSpatialIndexSegmentQueryImpl, [:pointer, :pointer, VECT, VECT, CP_FLOAT, :cpSpatialIndexSegmentQueryFunc, :pointer], :void
-  callback :cpSpatialIndexQueryImpl, [:pointer, :pointer, BBStruct, :cpSpatialIndexQueryFunc, :pointer], :void
+  callback :cpSpatialIndexQueryImpl, [:pointer, :pointer, BBStruct.by_value, :cpSpatialIndexQueryFunc, :pointer], :void
 
   class SpatialIndexClassStruct < NiceFFI::Struct
     layout :destroy, :cpSpatialIndexDestroyImpl,
@@ -74,9 +74,9 @@ module CP
   func :cpSpatialIndexCollideStatic, [:pointer, :pointer, :cpSpatialIndexQueryFunc, :pointer], :void
   cp_static_inline :cpSpatialIndexDestroy, [:pointer], :void
   cp_static_inline :cpSpatialIndexCount, [:pointer], :int
-  #cp_static_inline :cpSpatialIndexEach, [:pointer, :cpSpatialIndexIteratorFunc, :pointer], :void #TODO ask NiceFFI maintainer?
+  cp_static_inline :cpSpatialIndexEach, [:pointer]*3, :void
   cp_static_inline :cpSpatialIndexContains, [:pointer, :pointer, :uint], :int #cpBool
-  #cp_static_inline :cpSpatialIndexQuery[:pointer, :pointer, BBStruct, :cpSpatialIndexQueryFunc, :pointer], :void #TODO same here
+  cp_static_inline :cpSpatialIndexQuery, [:pointer, :pointer, BBStruct.by_value, :pointer, :pointer], :void
 
   class SpaceHash
     attr_reader :struct
@@ -96,27 +96,19 @@ module CP
     def num_cells;@struct.num_cells;end
     def cell_dim;@struct.cell_dim;end
     
-    #def insert(obj, bb)
-    #  CP.cpSpaceHashInsert(@struct.pointer, obj.struct.pointer, obj.struct.hash_value, bb.struct)
-    #end
-
-    #def remove(obj)
-    #  CP.cpSpaceHashRemove(@struct.pointer, obj.struct.pointer, obj.struct.hash_value)
-    #end
-
     def query_func
-      @query_func ||= Proc.new do |obj,other,data|
-        s = ShapeStruct.new(other)
+      @query_func ||= Proc.new do |_, other, _|
+        s = ShapeStruct.new other
         obj_id = s.data.get_long 0
         @shapes <<  ObjectSpace._id2ref(obj_id)
       end
     end
 
-    #def query_by_bb(bb) #removed from API
-    #  @shapes = []
-    #  CP.cpSpaceHashQuery(@struct.pointer, nil, bb.struct, query_func, nil)
-    #  @shapes
-    #end
+    def query(bb)
+      shapes = []
+      CP.cpSpatialIndexQuery @struct.pointer, nil, bb.struct, query_func, nil
+      shapes
+    end
 
   end
 
