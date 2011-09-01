@@ -18,7 +18,7 @@ module CP
   end
 
   class SpaceHashStruct < NiceFFI::Struct
-    layout(:spatial_index, CP::SpatialIndexStruct,
+    layout :spatial_index, CP::SpatialIndexStruct,
            :num_cells, :int,
            :cell_dim, CP_FLOAT,
            :table, :pointer,
@@ -26,7 +26,7 @@ module CP
            :pooled_bins, :pointer,
            :pooled_handles, :pointer,
            :allocated_buffers, :pointer,
-           :stamp, :uint) #TODO introduce constant for timestamp type
+           :stamp, :uint #TODO introduce constant for timestamp type
   end
   func :cpSpaceHashNew,  [CP_FLOAT,:int,:cpSpatialIndexQueryFunc,:pointer], :pointer
   func :cpSpaceHashResize, [:pointer, CP_FLOAT, :int], :void
@@ -76,7 +76,7 @@ module CP
   cp_static_inline :cpSpatialIndexCount, [:pointer], :int
   cp_static_inline :cpSpatialIndexEach, [:pointer]*3, :void
   cp_static_inline :cpSpatialIndexContains, [:pointer, :pointer, :uint], :int #cpBool
-  cp_static_inline :cpSpatialIndexQuery, [:pointer, :pointer, BBStruct.by_value, :pointer, :pointer], :void
+  #cp_static_inline :cpSpatialIndexQuery, [:pointer, :pointer, BBStruct.by_value, :pointer, :pointer], :void
 
   class SpaceHash
     attr_reader :struct
@@ -91,22 +91,30 @@ module CP
         #TODO find use cases of dynamic index construction with a pre-initialized static index
         @struct = SpaceHashStruct.new(CP.cpSpaceHashNew(cell_dim, cells, bb_func, nil))
       end
+      si = SpatialIndexStruct.new @struct.spatial_index
+      @klass = SpatialIndexClassStruct.new si.klass
+      @klass.freeze
     end
 
     def num_cells;@struct.num_cells;end
     def cell_dim;@struct.cell_dim;end
     
-    def query_func
-      @query_func ||= Proc.new do |_, other, _|
+    #def query_func
+    #  @query_func ||= Proc.new do |_, other, _|
+    #    s = ShapeStruct.new other
+    #    obj_id = s.data.get_long 0
+    #    shapes <<  ObjectSpace._id2ref(obj_id)
+    #  end
+    #end
+
+    def query(shape, bb, query_func = nil, data = nil)
+      shapes = []
+      query_func ||= Proc.new do |_, other, _|
         s = ShapeStruct.new other
         obj_id = s.data.get_long 0
-        @shapes <<  ObjectSpace._id2ref(obj_id)
+        shapes <<  ObjectSpace._id2ref(obj_id)
       end
-    end
-
-    def query(bb)
-      shapes = []
-      CP.cpSpatialIndexQuery @struct.pointer, nil, bb.struct, query_func, nil
+      @klass.query.call @struct.pointer, shape && shape.struct.pointer, bb.struct, query_func, data
       shapes
     end
 

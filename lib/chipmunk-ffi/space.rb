@@ -12,7 +12,7 @@ module CP
 	callback :cpSpaceBBQueryFunc, [:pointer,:pointer], :void
 
   class CollisionHandlerStruct < NiceFFI::Struct
-    layout(
+    layout
       :a, :uint,
       :b, :uint,
       :begin, :cpCollisionBeginFunc,
@@ -20,31 +20,33 @@ module CP
       :post_solve, :cpCollisionPostSolveFunc,
       :separate, :cpCollisionSeparateFunc,
       :data, :pointer
-    )
   end
 
   class SpaceStruct < NiceFFI::Struct
-    layout( :iterations, :int,
-      :elastic_iterations, :int,
-      :gravity, VECT,
-      :damping, CP_FLOAT,
-      :locked, :int,
-      :stamp, :int,
-      :static_shapes, :pointer,
-      :active_shapes, :pointer,
-      :bodies, :pointer,
-      :arbiters, :pointer,
-      :contact_set, :pointer,
-      :constraints, :pointer,
-      :coll_func_set, :pointer,
-      :default_handler, CollisionHandlerStruct.by_value,
-      :post_step_callbacks, :pointer,
-      :collisionBias, CP_FLOAT,
-      :collisionSlop, CP_FLOAT
-    )
-    def self.release(ptr)
-      CP.cpSpaceFree(ptr)
-    end
+    layout :iterations, :int,
+           :gravity, VECT,
+           :damping, CP_FLOAT,
+           :idle_speed_treshold, CP_FLOAT,
+           :sleep_time_treshold, CP_FLOAT,
+           :collision_slop, CP_FLOAT,
+           :collision_bias, CP_FLOAT,
+           :collision_persistence, :uint,
+           :enable_contact_graph, :int, #CP_BOOL
+           :data, :pointer,
+           :static_body, :pointer,
+           #sorta private section starts
+           :stamp, :uint,
+           :curr_dt, CP_FLOAT,
+           :bodies, :pointer,
+           :roused_bodies, :pointer,
+           :sleeping_components, :pointer,
+           :static_shapes, :pointer,
+           :active_shapes, :pointer
+    #and  the rest of private fields here, can be ignored, cause SpaceStruct is not part of any other structs
+
+    #def self.release(ptr) #TODO not sure if required
+    #  CP.cpSpaceFree(ptr)
+    #end
   end
 
   func :cpSpaceNew, [], :pointer
@@ -80,8 +82,11 @@ module CP
   
   func :cpSpaceBBQuery, [:pointer, :pointer, :uint, :uint, :cpSpaceBBQueryFunc, :pointer], :void
 
+  func :cpSpaceUseSpatialHash, [:pointer, CP_FLOAT, :int], :void
+
   class Space
     attr_reader :struct
+    attr_reader :active_shapes_index
     def initialize
       @struct = SpaceStruct.new(CP.cpSpaceNew)
       @static_shapes = []
@@ -91,6 +96,7 @@ module CP
       @blocks = {}
       @callbacks = {}
       @test_callbacks = Hash.new {|h,k| h[k] = {:begin => nil, :pre => nil, :post => nil, :sep => nil}}
+      @active_shapes_index = nil #SpaceHash.new(SpaceHashStruct.new(@struct.active_shapes)) #TODO cover BBTreeStruct
     end
     
     def iterations
@@ -330,8 +336,9 @@ module CP
       end
     end
 
-    def active_shapes_hash
-      SpaceHash.new(SpaceHashStruct.new(@struct.active_shapes))
+    def use_spatial_hash(dim, count)
+      CP.cpSpaceUseSpatialHash @struct, dim, count
+      @active_shapes_index = SpaceHash.new SpaceHashStruct.new @struct.active_shapes
     end
 
     def point_query(point, layers, group, &block)
