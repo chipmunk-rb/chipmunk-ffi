@@ -24,7 +24,7 @@ describe 'ShapeStruct in chipmunk' do
 
     it 'can get its layers' do
       # he sets layers to -1 on an unsigned int
-      @s.layers.should == 2**32-1
+      @s.layers.should == CP_ALL_LAYERS
     end
 
     it 'can get its group' do
