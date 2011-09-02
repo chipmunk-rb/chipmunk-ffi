@@ -12,14 +12,13 @@ module CP
 	callback :cpSpaceBBQueryFunc, [:pointer,:pointer], :void
 
   class CollisionHandlerStruct < NiceFFI::Struct
-    layout
-      :a, :uint,
-      :b, :uint,
-      :begin, :cpCollisionBeginFunc,
-      :pre_solve, :cpCollisionPreSolveFunc,
-      :post_solve, :cpCollisionPostSolveFunc,
-      :separate, :cpCollisionSeparateFunc,
-      :data, :pointer
+    layout :a, :uint,
+           :b, :uint,
+           :begin, :cpCollisionBeginFunc,
+           :pre_solve, :cpCollisionPreSolveFunc,
+           :post_solve, :cpCollisionPostSolveFunc,
+           :separate, :cpCollisionSeparateFunc,
+           :data, :pointer
   end
 
   class SpaceStruct < NiceFFI::Struct
@@ -98,26 +97,10 @@ module CP
       @test_callbacks = Hash.new {|h,k| h[k] = {:begin => nil, :pre => nil, :post => nil, :sep => nil}}
       @active_shapes_index = nil #SpaceHash.new(SpaceHashStruct.new(@struct.active_shapes)) #TODO cover BBTreeStruct
     end
-    
-    def iterations
-      @struct.iterations
-    end
-    def iterations=(its)
-      @struct.iterations = its
-    end
 
-    def elastic_iterations
-      @struct.elastic_iterations
-    end
-    def elastic_iterations=(elastic_its)
-      @struct.elastic_iterations = elastic_its
-    end
-
-    def damping
-      @struct.damping
-    end
-    def damping=(damp)
-      @struct.damping = damp
+    [:iterations, :elastic_iterations, :damping].each do |f|
+      define_method(f) { @struct[f] }
+      define_method("#{f}=") { |new_f| @struct[f] = new_f }
     end
 
     def gravity
