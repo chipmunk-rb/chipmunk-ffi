@@ -40,6 +40,10 @@ module CP
   end
 
   CP_FLOAT = :double
+  CP_GROUP_TYPE = :uint #:pointer #uintptr_t
+  CP_LAYERS_TYPE = :uint
+  CP_COLLISION_TYPE_TYPE = :uint #:pointer
+  CP_ALL_LAYERS = 0
 
 end
 libs = %w{vec2 core bb body shape arbiter space constraint spatial_index}

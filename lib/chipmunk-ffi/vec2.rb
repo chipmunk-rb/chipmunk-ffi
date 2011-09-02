@@ -44,7 +44,7 @@ module CP
   cp_static_inline :cpvnormalize, [VECT], VECT
   cp_static_inline :cpvnormalize_safe, [VECT], VECT
 
-  cp_static_inline :cpvclamp, [VECT]*2, VECT
+  cp_static_inline :cpvclamp, [VECT, CP_FLOAT], VECT
   cp_static_inline :cpvlerpconst, [VECT, VECT, CP_FLOAT], VECT
   cp_static_inline :cpvdist, [VECT]*2, CP_FLOAT
   cp_static_inline :cpvdistsq, [VECT]*2, CP_FLOAT
@@ -172,8 +172,8 @@ module CP
       Vec2.new CP.cpvnormalize_safe(@struct)
     end
 
-    def clamp(other_vec)
-      Vec2.new CP.cpvclamp(@struct)
+    def clamp(len)
+      Vec2.new CP.cpvclamp(@struct, len)
     end
 
     def lerpconst(other_vec, d)
