@@ -178,17 +178,17 @@ module CP
     end
     alias :ang_vel_limit  :w_limit
     alias :ang_vel_limit= :w_limit=
-	
+
 	def static?
-		CP.cpBodyIsStatic(@struct.pointer)
+		0 != CP.cpBodyIsStatic(@struct.pointer)
 	end
 	
 	def rogue?
-		CP.cpBodyIsRogue(@struct.pointer)
+		0 != CP.cpBodyIsRogue(@struct.pointer)
 	end
 	
 	def sleeping?
-		CP.cpBodyIsSleeping(@struct.pointer)
+		0 != CP.cpBodyIsSleeping(@struct.pointer)
 	end
 	
     def local2world(v)
