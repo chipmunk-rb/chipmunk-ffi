@@ -27,10 +27,9 @@ module CP
            :u, CP_FLOAT,
            :surface_v, VECT,
            :data, :pointer,
-           :collision_type, :uint,
-           :group, :uint,
-           :layers, :uint,
-           :hash_value, :size_t,
+           :collision_type, CP_COLLISION_TYPE_TYPE,
+           :group, CP_GROUP_TYPE,
+           :layers, CP_LAYERS_TYPE,
            #CP_PRIVATE values below, ergo unused.
            #Can't omit them, ShapeStruct is part of other structs
            :space, :pointer,

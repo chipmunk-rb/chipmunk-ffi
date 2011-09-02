@@ -18,7 +18,7 @@ module CP
   end
 
   class SpaceHashStruct < NiceFFI::Struct
-    layout(:spatial_index, CP::SpatialIndexStruct,
+    layout :spatial_index, CP::SpatialIndexStruct,
            :num_cells, :int,
            :cell_dim, CP_FLOAT,
            :table, :pointer,
@@ -26,7 +26,7 @@ module CP
            :pooled_bins, :pointer,
            :pooled_handles, :pointer,
            :allocated_buffers, :pointer,
-           :stamp, :uint) #TODO introduce constant for timestamp type
+           :stamp, :uint #TODO introduce constant for timestamp type
   end
   func :cpSpaceHashNew,  [CP_FLOAT,:int,:cpSpatialIndexQueryFunc,:pointer], :pointer
   func :cpSpaceHashResize, [:pointer, CP_FLOAT, :int], :void
@@ -50,7 +50,7 @@ module CP
 
   callback :cpSpatialIndexPointQueryImpl, [:pointer, VECT, :cpSpatialIndexQueryFunc, :pointer], :void
   callback :cpSpatialIndexSegmentQueryImpl, [:pointer, :pointer, VECT, VECT, CP_FLOAT, :cpSpatialIndexSegmentQueryFunc, :pointer], :void
-  callback :cpSpatialIndexQueryImpl, [:pointer, :pointer, BBStruct, :cpSpatialIndexQueryFunc, :pointer], :void
+  callback :cpSpatialIndexQueryImpl, [:pointer, :pointer, BBStruct.by_value, :cpSpatialIndexQueryFunc, :pointer], :void
 
   class SpatialIndexClassStruct < NiceFFI::Struct
     layout :destroy, :cpSpatialIndexDestroyImpl,
@@ -74,9 +74,9 @@ module CP
   func :cpSpatialIndexCollideStatic, [:pointer, :pointer, :cpSpatialIndexQueryFunc, :pointer], :void
   cp_static_inline :cpSpatialIndexDestroy, [:pointer], :void
   cp_static_inline :cpSpatialIndexCount, [:pointer], :int
-  #cp_static_inline :cpSpatialIndexEach, [:pointer, :cpSpatialIndexIteratorFunc, :pointer], :void #TODO ask NiceFFI maintainer?
+  cp_static_inline :cpSpatialIndexEach, [:pointer]*3, :void
   cp_static_inline :cpSpatialIndexContains, [:pointer, :pointer, :uint], :int #cpBool
-  #cp_static_inline :cpSpatialIndexQuery[:pointer, :pointer, BBStruct, :cpSpatialIndexQueryFunc, :pointer], :void #TODO same here
+  #cp_static_inline :cpSpatialIndexQuery, [:pointer, :pointer, BBStruct.by_value, :pointer, :pointer], :void
 
   class SpaceHash
     attr_reader :struct
@@ -91,32 +91,32 @@ module CP
         #TODO find use cases of dynamic index construction with a pre-initialized static index
         @struct = SpaceHashStruct.new(CP.cpSpaceHashNew(cell_dim, cells, bb_func, nil))
       end
+      si = SpatialIndexStruct.new @struct.spatial_index
+      @klass = SpatialIndexClassStruct.new si.klass
+      @klass.freeze
     end
 
     def num_cells;@struct.num_cells;end
     def cell_dim;@struct.cell_dim;end
     
-    #def insert(obj, bb)
-    #  CP.cpSpaceHashInsert(@struct.pointer, obj.struct.pointer, obj.struct.hash_value, bb.struct)
+    #def query_func
+    #  @query_func ||= Proc.new do |_, other, _|
+    #    s = ShapeStruct.new other
+    #    obj_id = s.data.get_long 0
+    #    shapes <<  ObjectSpace._id2ref(obj_id)
+    #  end
     #end
 
-    #def remove(obj)
-    #  CP.cpSpaceHashRemove(@struct.pointer, obj.struct.pointer, obj.struct.hash_value)
-    #end
-
-    def query_func
-      @query_func ||= Proc.new do |obj,other,data|
-        s = ShapeStruct.new(other)
+    def query(shape, bb, query_func = nil, data = nil)
+      shapes = []
+      query_func ||= Proc.new do |_, other, _|
+        s = ShapeStruct.new other
         obj_id = s.data.get_long 0
-        @shapes <<  ObjectSpace._id2ref(obj_id)
+        shapes <<  ObjectSpace._id2ref(obj_id)
       end
+      @klass.query.call @struct.pointer, shape && shape.struct.pointer, bb.struct, query_func, data
+      shapes
     end
-
-    #def query_by_bb(bb) #removed from API
-    #  @shapes = []
-    #  CP.cpSpaceHashQuery(@struct.pointer, nil, bb.struct, query_func, nil)
-    #  @shapes
-    #end
 
   end
 

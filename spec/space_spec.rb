@@ -148,18 +148,26 @@ describe 'Space in chipmunk' do
 
   end
 
-  #it 'can do a bb query' do #TODO first ensure space_hash_spec.rb gets passed
-  #  shapy = CP::Shape::Circle.new @b, 40, CP::ZERO_VEC_2
-  #  shapy.collision_type = :foo
-  #
-  #  @s.add_shape shapy
-  #
-  #  hash = @s.active_shapes_hash
-  #  shapes = hash.query_by_bb BB.new(0,0,5,5)
-  #
-  #  shapes.size.should == 1
-  #  shapes.first.should == shapy
-  #end
+  it 'can do a bb query' do
+    shapy = CP::Shape::Circle.new @b, 40, CP::ZERO_VEC_2
+    shapy.collision_type = :foo
+
+    @s.use_spatial_hash 1, 2
+    @s.add_shape shapy
+
+    index = @s.active_shapes_index
+
+    #query_func = Proc.new do |_, other, _|
+    #    s = ShapeStruct.new other
+    #    obj_id = s.data.get_long 0
+    #    @shapes <<  ObjectSpace._id2ref(obj_id)
+    #end
+
+    shapes = index.query nil, BB.new(0,0,5,5)
+
+    shapes.size.should == 1
+    shapes.first.should == shapy
+  end
 
   it 'can do a segment query' do
     shapy = CP::Shape::Circle.new @b, 40, CP::ZERO_VEC_2
